@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shiny Trak - Control Panel</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0f0c1e;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+
+        .subtitle { color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
+        .subtitle a { color: #a78bfa; text-decoration: none; }
+        .subtitle a:hover { text-decoration: underline; }
+
+        .section {
+            background: #1a1630;
+            border: 1px solid rgba(147, 51, 234, 0.25);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #a78bfa;
+            margin-bottom: 14px;
+        }
+
+        .add-form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        input[type="text"] {
+            background: #0f0c1e;
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            border-radius: 8px;
+            color: #c2c8f0;
+            font-size: 14px;
+            padding: 8px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+            flex: 1;
+            min-width: 160px;
+        }
+        input[type="text"]::placeholder { color: #4a4870; }
+        input[type="text"]:focus { border-color: #7c3aed; }
+
+        select {
+            background: #0f0c1e;
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 13px;
+            padding: 8px 10px;
+            outline: none;
+            cursor: pointer;
+        }
+        select:focus { border-color: #7c3aed; }
+
+        .btn {
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 14px;
+            transition: opacity 0.15s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn:active { transform: scale(0.96); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-primary { background: #7c3aed; color: #ffffff; }
+        .btn-danger { background: #dc2626; color: #ffffff; }
+        .btn-ghost {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .btn-ghost:hover { background: rgba(148, 163, 184, 0.18); }
+
+        .error-msg { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
+        .error-msg.visible { display: block; }
+
+        .hunt-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #221d3a;
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .hunt-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .hunt-sprite {
+            width: 40px; height: 40px;
+            image-rendering: pixelated;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .hunt-sprite-placeholder {
+            width: 40px; height: 40px;
+            background: rgba(147, 51, 234, 0.15);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .hunt-display-name { font-weight: 700; font-size: 15px; }
+
+        .hunt-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .count-group { display: flex; align-items: center; gap: 6px; }
+
+        .count-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fbbf24;
+            font-variant-numeric: tabular-nums;
+            min-width: 52px;
+            text-align: center;
+        }
+
+        .btn-count {
+            background: rgba(147, 51, 234, 0.25);
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            border-radius: 6px;
+            color: #e2e8f0;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 4px 10px;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .btn-count:hover { background: rgba(147, 51, 234, 0.45); }
+        .btn-count:active { transform: scale(0.93); }
+
+        .hotkey-group { display: flex; align-items: center; gap: 5px; }
+
+        .hotkey-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 5px;
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 7px;
+            white-space: nowrap;
+        }
+
+        .listening-hint {
+            color: #f59c0b;
+            font-size: 12px;
+            font-weight: 600;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .empty-state { color: #4a4870; font-size: 14px; text-align: center; padding: 20px 0; }
+
+        .autocomplete-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .autocomplete-wrapper input[type="text"] {
+            width: 100%;
+            flex: none;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1630;
+            border: 1px solid rgba(147, 51, 234, 0.4);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .autocomplete-dropdown.visible { display: block; }
+
+        .autocomplete-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+
+        .autocomplete-option:hover,
+        .autocomplete-option.highlighted { background: rgba(147, 51, 234, 0.25); }
+    </style> 
+</head>
+<body>
+    <h1>✨ Shiny Trak</h1>
+    <p class="subtitle">OBS overlay: <a href="/overlay" target="_blank">http://localhost:3000/overlay</a></p>
+
+    <div class="section">
+        <div class="section-title">Add New Hunt</div>
+        <div class="add-form">
+            <div class="autocomplete-wrapper">
+                <input type="text" id="pokemon-input" placeholder="Pokemon name (e.g., ralts, pikachu)" autocomplete="off" />
+                <div class="autocomplete-dropdown" id="pokemon-dropdown"></div>
+            </div>
+            <select id="mode-select">
+                <option value="full">Full (Sprite + Name + Count)</option>
+                <option value="name">Name + Count</option>
+                <option value="counter">Count Only</option>
+            </select>
+            <button class="btn btn-primary" id="add-btn" onclick="addHunt()">Add Hunt</button>
+        </div>
+        <div class="error-msg" id="add-error"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Active Hunts</div>
+        <div id="hunts-container">
+            <div class="empty-state">No hunts yet - add one above</div>
+        </div>
+    </div>
+
+    <script>
+        let hunts = [];
+        let capturingFor = null;
+
+        // Hotkey helpers
+        function keyToPynput(e) {
+            const modifiers = ['Control', 'Shift', 'Alt', 'Meta'];
+            if (modifiers.includes(e.key)) return null;
+
+            const parts = [];
+            if (e.ctrlKey) parts.push('<ctrl>');
+            if (e.shiftKey) parts.push('<shift>');
+            if (e.altKey) parts.push('<alt>');
+            if (e.metaKey) parts.push('<cmd>');
+
+            const keyMap = {
+                'F1':'<f1>','F2':'<f2>','F3':'<f3>','F4':'<f4>',
+                'F5':'<f5>','F6':'<f6>','F7':'<f7>','F8':'<f8>',
+                'F9':'<f9>','F10':'<f10>','F11':'<f11>','F12':'<f12>',
+                'Enter':'<enter>','Escape':'<esc>',' ':'<space>',
+                'Tab':'<tab>','Backspace':'<backspace>','Delete':'<delete>',
+                'ArrowUp':'<up>','ArrowDown':'<down>',
+                'ArrowLeft':'<left>','ArrowRight':'<right>',
+                'Home':'<home>','End':'<end>',
+                'PageUp':'<page_up>','PageDown':'<page_down>',
+                'Insert':'<insert>',
+            };
+
+            const mapped = keyMap[e.key] || e.key.toLowerCase();
+            parts.push(mapped);
+            return parts.join('+');
+        }
+
+        function formatHotkey(hotkey) {
+            if (!hotkey) return '';
+            return hotkey
+                .replace(/<ctrl>/g,      'Ctrl')
+                .replace(/<shift>/g,     'Shift')
+                .replace(/<alt>/g,       'Alt')
+                .replace(/<cmd>/g,       'Cmd')
+                .replace(/<f(\d+)>/g,    'F$1')
+                .replace(/<enter>/g,     'Enter')
+                .replace(/<esc>/g,       'Esc')
+                .replace(/<space>/g,     'Space')
+                .replace(/<tab>/g,       'Tab')
+                .replace(/<backspace>/g, 'Bksp')
+                .replace(/<delete>/g,    'Del')
+                .replace(/<up>/g,        '↑')
+                .replace(/<down>/g,      '↓')
+                .replace(/<left>/g,      '←')
+                .replace(/<right>/g,     '→')
+                .replace(/<home>/g,      'Home')
+                .replace(/<end>/g,       'End')
+                .replace(/<page_up>/g,   'PgUp')
+                .replace(/<page_down>/g, 'PgDn')
+                .replace(/<insert>/g,    'Ins')
+                .split('+')
+                .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+                .join('+');
+        }
+
+        // API Helper
+        async function api(method, path, body) {
+            const res = await fetch(path, {
+                method,
+                headers: body ? { 'Content-Type': 'application/json' } : {},
+                body: body ? JSON.stringify(body) : undefined,
+            });
+            return res.json();
+        }
+
+        // Render
+        function makePlaceholder() {
+            const div = document.createElement('div');
+            div.className = 'hunt-sprite-placeholder';
+            div.textContent = '✨';
+            return div;
+        }
+
+        function renderHotkeyGroup(container, hunt) {
+            container.innerHTML = '';
+
+            [
+                { field: 'hotkey',          label: '+' },
+                { field: 'hotkeyDecrement', label: '-' },
+            ].forEach(({ field, label }) => {
+                const group = document.createElement('div');
+                group.style.cssText = 'display:flex;align-items:center;gap:4px;';
+
+                const lbl = document.createElement('span');
+                lbl.style.cssText = 'font-size:11px;color:#94a3b8;';
+                lbl.textContent = label + ':';
+                group.appendChild(lbl);
+
+                if (hunt[field]) {
+                    const badge = document.createElement('span');
+                    badge.className = 'hotkey-badge';
+                    badge.textContent = formatHotkey(hunt[field]);
+                    group.appendChild(badge);
+
+                    const btnClear = document.createElement('button');
+                    btnClear.className = 'btn btn-ghost';
+                    btnClear.textContent = "×";
+                    btnClear.style.padding = '4px 8px';
+                    btnClear.onclick = () => api('PUT', `/api/hunts/${hunt.id}`, { [field]: null });
+                    group.appendChild(btnClear);
+                }
+
+                const btnSet = document.createElement('button');
+                btnSet.className = 'btn btn-ghost';
+                btnSet.textContent = hunt[field] ? '✎' : 'Set';
+                btnSet.onclick = () => startCapture(hunt.id, container, field);
+                group.appendChild(btnSet);
+
+                container.appendChild(group);
+            });
+        }
+
+        function renderHunts(data) {
+            hunts = data;
+            const container = document.getElementById('hunts-container');
+
+            if (!hunts.length) {
+                container.innerHTML = '<div class="empty-state">No hunts yet - add one above.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            hunts.forEach(hunt => {
+                const row = document.createElement('div');
+                row.className = 'hunt-row';
+                row.dataset.id = hunt.id;
+
+                // Info
+                const info = document.createElement('div');
+                info.className = 'hunt-info';
+                if (hunt.spriteUrl) {
+                    const img = document.createElement('img');
+                    img.className = 'hunt-sprite';
+                    img.src = hunt.spriteUrl;
+                    img.alt = hunt.displayName;
+                    img.onerror = () => img.replaceWith(makePlaceholder());
+                    info.appendChild(img);
+                } else {
+                    info.appendChild(makePlaceholder());
+                }
+                const nameEl = document.createElement('span');
+                nameEl.className = 'hunt-display-name';
+                nameEl.textContent = hunt.displayName;
+                info.appendChild(nameEl);
+                row.appendChild(info);
+
+                // Controls
+                const controls = document.createElement('div');
+                controls.className = 'hunt-controls';
+
+                // Mode select
+                const modeSelect = document.createElement('select');
+                [['full','Full'],['name','Name'],['counter','Counter']].forEach(([val, label]) => {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = label;
+                    if (hunt.displayMode === val) opt.selected = true;
+                    modeSelect.appendChild(opt);
+                });
+                modeSelect.addEventListener('change', () => {
+                    api('PUT', `/api/hunts/${hunt.id}`, { displayMode: modeSelect.value });
+                });
+                controls.appendChild(modeSelect);
+
+                //Hotkey group
+                const hotkeyGroup = document.createElement('div');
+                hotkeyGroup.className = 'hotkey-group';
+                renderHotkeyGroup(hotkeyGroup, hunt);
+                controls.appendChild(hotkeyGroup);
+
+                // Count group
+                const countGroup = document.createElement('div');
+                countGroup.className = 'count-group';
+
+                const btnDec = document.createElement('button');
+                btnDec.className = 'btn-count';
+                btnDec.textContent = '-';
+                btnDec.onclick = () => api('POST', `/api/hunts/${hunt.id}/decrement`);
+                countGroup.appendChild(btnDec);
+
+                const countEl = document.createElement('span');
+                countEl.className = 'count-value';
+                countEl.textContent = hunt.count.toLocaleString('en-US');
+                countGroup.appendChild(countEl);
+
+                const btnInc = document.createElement('button');
+                btnInc.className = 'btn-count';
+                btnInc.textContent = '+';
+                btnInc.onclick = () => api('POST', `/api/hunts/${hunt.id}/increment`);
+                countGroup.appendChild(btnInc);
+
+                controls.appendChild(countGroup);
+
+                // Reset
+                const btnReset = document.createElement('button');
+                btnReset.className = 'btn btn-ghost';
+                btnReset.textContent = '↺ Reset';
+                btnReset.onclick = () => {
+                    if (confirm(`Reset ${hunt.displayName}'s count to 0?`)) {
+                        api('POST', `/api/hunts/${hunt.id}/reset`);
+                    }
+                };
+                controls.appendChild(btnReset);
+
+                // Delete
+                const btnDel = document.createElement('button');
+                btnDel.className = 'btn btn-danger';
+                btnDel.textContent = '✕';
+                btnDel.onclick = () => {
+                    if (confirm(`Remove ${hunt.displayName}?`)) {
+                        api('DELETE', `/api/hunts/${hunt.id}`);
+                    }
+                };
+                controls.appendChild(btnDel);
+
+                row.appendChild(controls);
+                container.appendChild(row);
+            });
+        }
+
+        // Hotkey capture
+        function startCapture(huntId, container, field) {
+            if (capturingFor) return;
+            capturingFor = { huntId, field };
+
+            container.innerHTML = '';
+            const hint = document.createElement('span');
+            hint.className = 'listening-hint';
+            hint.textContent = 'Press a key...';
+            container.appendChild(hint);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-ghost';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.style.padding = '4px 8px';
+            cancelBtn.onclick = cancelCapture;
+            container.appendChild(cancelBtn);
+
+            document.addEventListener('keydown', onCaptureKey);
+        }
+
+        function onCaptureKey(e) {
+            e.preventDefault();
+            const hotkey = keyToPynput(e);
+            if (!hotkey) return;
+
+            document.removeEventListener('keydown', onCaptureKey);
+            const { huntId, field } = capturingFor;
+            capturingFor = null;
+            api('PUT', `/api/hunts/${huntId}`, { [field]: hotkey });
+        }
+
+        function cancelCapture() {
+            if (!capturingFor) return;
+            document.removeEventListener('keydown', onCaptureKey);
+            capturingFor = null;
+            renderHunts(hunts);
+        }
+
+        // Add hunt
+        async function addHunt() {
+            const input = document.getElementById('pokemon-input');
+            const modeSelect = document.getElementById('mode-select');
+            const addBtn = document.getElementById('add-btn');
+            const errorEl = document.getElementById('add-error');
+            const name = input.value.trim();
+            if (!name) return;
+
+            errorEl.classList.remove('visible');
+            addBtn.disabled = true;
+            addBtn.textContent = 'Looking up...';
+
+            try {
+                const pokemon = await api('GET', `/api/pokemon/${encodeURIComponent(name)}`);
+                if (pokemon.error) throw new Error(pokemon.error);
+                await api('POST', '/api/hunts', {
+                    pokemon: pokemon.pokemon,
+                    displayName: pokemon.displayName,
+                    spriteUrl: pokemon.spriteUrl,
+                    displayMode: modeSelect.value,
+                });
+                input.value = '';
+            } catch (err) {
+                errorEl.textContent = err.message || 'Could not find that Pokemon';
+                errorEl.classList.add('visible');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = 'Add Hunt';
+            }
+        }
+
+        // SSE
+        function connect() {
+            const es = new EventSource('/events');
+            es.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.hunts) renderHunts(data.hunts);
+                } catch (_) {}
+            };
+            es.onerror = () => { es.close(); setTimeout(connect, 3000); };
+        }
+
+        connect();
+
+        let pokemonNames = [];
+        let acHighlight = -1;
+
+        fetch('/api/pokemon-list')
+            .then(r => r.json())
+            .then(names => { pokemonNames = names; })
+            .catch(() => {});
+
+        function showDropdown(query) {
+            const dropdown = document.getElementById('pokemon-dropdown');
+            acHighlight = -1;
+            if (query.length < 2) { dropdown.classList.remove('visible'); return; }
+
+            const matches = pokemonNames.filter(n => n.startsWith(query.toLowerCase())).slice(0, 8);
+            if (!matches.length) { dropdown.classList.remove('visible'); return; }
+
+            dropdown.innerHTML = '';
+            matches.forEach(name => {
+                const opt = document.createElement('div');
+                opt.className = 'autocomplete-option';
+                opt.textContent = name;
+                opt.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    document.getElementById('pokemon-input').value = name;
+                    dropdown.classList.remove('visible');
+                });
+                dropdown.appendChild(opt);
+            });
+            dropdown.classList.add('visible');
+        }
+
+        document.getElementById('pokemon-input').addEventListener('input', e => {
+            showDropdown(e.target.value.trim());
+        });
+
+        document.getElementById('pokemon-input').addEventListener('blur', () => {
+            setTimeout(() => document.getElementById('pokemon-dropdown').classList.remove('visible'), 150);
+        });
+
+        document.getElementById('pokemon-input').addEventListener('keydown', e => {
+            const dropdown = document.getElementById('pokemon-dropdown');
+            const options = [...dropdown.querySelectorAll('.autocomplete-option')];
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                acHighlight = Math.min(acHighlight + 1, options.length - 1);
+                options.forEach((o, i) => o.classList.toggle('highlighted', i === acHighlight));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                acHighlight = Math.max(acHighlight -1, -1);
+                options.forEach((o, i) => o.classList.toggle('highlighted', i === acHighlight));
+            } else if (e.key === 'Enter') {
+                if (acHighlight >= 0 && options[acHighlight]) {
+                    e.preventDefault();
+                    document.getElementById('pokemon-input').value = options[acHighlight].textContent;
+                    dropdown.classList.remove('visible');
+                } else {
+                    addHunt();
+                }
+            } else if (e.key === 'Escape') {
+                dropdown.classList.remove('visible');
+            }
+        });
+    </script>
+
+</body>
+</html>

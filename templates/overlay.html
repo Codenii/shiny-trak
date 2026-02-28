@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shiny Trak Overlay</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 12px;
+        }
+
+        #hunts {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hunt-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(10, 8, 25, 0.88);
+            border: 1px solid rgba(147, 51, 234, 0.5);
+            border-radius: 12px;
+            padding: 7px 14px;
+            box-shadow: 0 0 16px rgba(147, 51, 234, 0.2), 0 2px 8px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            width: fit-content;
+        }
+
+        .sparkle { font-size: 14px; line-height: 1; }
+
+        .sprite {
+            width: 40px;
+            height: 40px;
+            image-rendering: pixelated;
+            object-fit: contain;
+        }
+
+        .hunt-name {
+            color: #e2e8f0;
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .separator { color: rgba(148, 163, 184, 0.5); font-size: 13px; }
+
+        .hunt-count {
+            color: #fbbf24;
+            font-size: 20px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes count-flash {
+            0%      { color: #fbbf24; transform: scale(1); }
+            40%     { color: #ffffff; transform: scale(1.15); }
+            100%    { color: #fbbf24; transform: scale(1); }
+        }
+
+        .count-flash { animation: count-flash 0.35s ease; }
+    </style>
+</head>
+<body>
+    <div id="hunts"></div>
+
+    <script>
+        let prevCounts = {};
+
+        function renderHunts(hunts) {
+            const container = document.getElementById('hunts');
+            const newCounts = {};
+            hunts.forEach(h => { newCounts[h.id] = h.count; });
+
+            container.innerHTML = '';
+
+            hunts.forEach(hunt => {
+                const card = document.createElement('div');
+                card.className = 'hunt-card';
+
+                // Sparkle
+                const sparkle = document.createElement('span')
+                sparkle.className = 'sparkle';
+                sparkle.textContent = '✨';
+                card.appendChild(sparkle);
+
+                // Sprite (full mode only)
+                if (hunt.displayMode === 'full' && hunt.spriteUrl) {
+                    const img = document.createElement('img');
+                    img.className = 'sprite';
+                    img.src = hunt.spriteUrl;
+                    img.alt = hunt.displayName;
+                    img.onerror = () => img.style.display = 'none';
+                    card.appendChild(img);
+                }
+
+                // Name (name + full modes)
+                if (hunt.displayMode !== 'counter') {
+                    const name = document.createElement('span');
+                    name.className = 'hunt-name';
+                    name.textContent = hunt.displayName;
+                    card.appendChild(name);
+
+                    const sep = document.createElement('span');
+                    sep.className = 'separator';
+                    sep.textContent = '·';
+                    card.appendChild(sep);
+                }
+
+                // Count (always show)
+                const countEl = document.createElement('span');
+                countEl.className = 'hunt-count';
+                countEl.textContent = hunt.count.toLocaleString('en-US');
+
+                // Flash animation if count changed
+                if (prevCounts[hunt.id] !== undefined && prevCounts[hunt.id] !== hunt.count) {
+                    countEl.classList.add('count-flash');
+                    countEl.addEventListener('animationend', () => {
+                        countEl.classList.remove('count-flash');
+                    }, { once: true });
+                }
+
+                card.appendChild(countEl);
+                container.appendChild(card);
+            });
+
+            prevCounts = newCounts;
+        }
+
+        function connect() {
+            const es = new EventSource('/events');
+            es.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data.hunts) renderHunts(data.hunts);
+                } catch (err) {
+                    console.error('Parse error:', err);
+                }
+            };
+            es.onerror = () => {
+                es.close();
+                setTimeout(connect, 3000);
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>
