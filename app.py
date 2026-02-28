@@ -193,10 +193,15 @@ def update_hunt(hunt_id):
         return jsonify({"error": "not found"}), 404
     
     data = request.json or {}
-    allowed = {"displayName", "displayMode", "hotkey", "hotkeyDecrement", "spriteUrl"}
+    allowed = {"displayName", "displayMode", "hotkey", "hotkeyDecrement", "spriteUrl", "count"}
     for k in allowed:
         if k in data:
-            hunt[k] = data[k] or None if k in ('hotkey', 'hotkeyDecrement') else data[k]
+            if k == 'count':
+                hunt['count'] = max(0, int(data[k]))
+            elif k in ('hotkey', 'hotkeyDecrement'):
+                hunt[k] = data[k] or None
+            else:
+                hunt[k] = data[k]
     save_hunts(hunts)
     broadcast(hunts)
     rebuild_hotkeys()

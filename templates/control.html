@@ -145,6 +145,17 @@
             font-variant-numeric: tabular-nums;
             min-width: 52px;
             text-align: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 5ch;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .count-value::-webkit-outer-spin-button,
+        .count-value::-webkit-inner-spin-button {
+            -webkit-appearance: none;
         }
 
         .btn-count {
@@ -443,9 +454,15 @@
                 btnDec.onclick = () => api('POST', `/api/hunts/${hunt.id}/decrement`);
                 countGroup.appendChild(btnDec);
 
-                const countEl = document.createElement('span');
+                const countEl = document.createElement('input');
+                countEl.type = 'number';
                 countEl.className = 'count-value';
-                countEl.textContent = hunt.count.toLocaleString('en-US');
+                countEl.value = hunt.count;
+                countEl.min = 0;
+                countEl.onchange = () => {
+                    const val = parseInt(countEl.value);
+                    if (!isNaN(val) && val >= 0) api('PUT', `/api/hunts/${hunt.id}`, { count: val });
+                };
                 countGroup.appendChild(countEl);
 
                 const btnInc = document.createElement('button');
