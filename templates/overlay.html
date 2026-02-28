@@ -15,7 +15,7 @@
         #hunts {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
         }
 
         .hunt-card {
@@ -25,24 +25,26 @@
             background: rgba(10, 8, 25, 0.88);
             border: 1px solid rgba(147, 51, 234, 0.5);
             border-radius: 12px;
-            padding: 7px 14px;
+            padding: 10px 18px;
             box-shadow: 0 0 16px rgba(147, 51, 234, 0.2), 0 2px 8px rgba(0,0,0,0.5);
             backdrop-filter: blur(8px);
             width: fit-content;
         }
 
-        .sparkle { font-size: 14px; line-height: 1; }
+        .sparkle { font-size: 18px; line-height: 1; }
 
         .sprite {
-            width: 40px;
-            height: 40px;
-            image-rendering: pixelated;
+            width: 64px;
+            height: 64px;
+            image-rendering: auto;
             object-fit: contain;
+            transform: scale(2);
+            margin: 0 8px;
         }
 
         .hunt-name {
             color: #e2e8f0;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 600;
             white-space: nowrap;
         }
@@ -51,7 +53,7 @@
 
         .hunt-count {
             color: #fbbf24;
-            font-size: 20px;
+            font-size: 26px;
             font-weight: 800;
             font-variant-numeric: tabular-nums;
             letter-spacing: 0.5px;
