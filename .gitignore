@@ -20,3 +20,8 @@ data/
 
 # Enviroment files
 .env
+
+# PyInstaller
+build/
+dist/
+*.spec

@@ -242,6 +242,7 @@
 <body>
     <h1>✨ Shiny Trak</h1>
     <p class="subtitle">OBS overlay: <a href="/overlay" target="_blank">http://localhost:3000/overlay</a></p>
+    <button onclick="shutdownApp()" class="btn btn-ghost" style="color:#f87171">⏻ Shut Down</button>
 
     <div class="section">
         <div class="section-title">Add New Hunt</div>
@@ -648,6 +649,15 @@
                 dropdown.classList.remove('visible');
             }
         });
+
+        function shutdownApp() {
+            if (confirm('Shut down Shiny Trak?')) {
+                fetch('/api/shutdown', { method: 'POST' })
+                    .finally(() => {
+                        document.body.innerHTML = '<p style="color:#94a3b8;padding:40px;font-family:sans-serif;">Shiny Trak has been shut down. You can close this tab.</p>';
+                    });
+            }
+        }
     </script>
 
 </body>

@@ -350,6 +350,15 @@ def pokemon_list():
         return jsonify([])
 
 
+@app.post('/api/shutdown')
+def shutdown():
+    def _stop():
+        time.sleep(0.5)
+        os._exit(0)
+    threading.Thread(target=_stop, daemon=True).start()
+    return jsonify({'ok': True})
+
+
 # Start
 if __name__ == "__main__":
     rebuild_hotkeys()
