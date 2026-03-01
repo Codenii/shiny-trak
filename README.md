@@ -31,20 +31,20 @@ Download the latest release for your platform from the [Releases](../../releases
 **macOS**: Unzip and move `ShinyTrak.app` to your Applications folder. See [First Launch on macOS](#first-launch-on-macos) below.
 
 **Linux**: Make the file executable, then run it:
-```chmod +x ShinyTrak
-./ShinyTrak```
+`chmod +x ShinyTrak
+./ShinyTrak`
 
 ### Running from Source
 
 Requires Python 3.8+ and pip.
 
 **Windows**
-```pip install -r requirements.txt
-python app.py```
+`pip install -r requirements.txt
+python app.py`
 
 **macOS / Linux**
-```pip3 install -r requirements.txt
-python3 app.py```
+`pip3 install -r requirements.txt
+python3 app.py`
 
 ---
 
