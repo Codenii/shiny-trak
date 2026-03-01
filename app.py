@@ -12,6 +12,8 @@ from queue import Queue, Empty
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
 try:
+    if platform.system() == 'Darwin' and getattr(sys, 'frozen', False):
+        raise ImportError
     from pynput import keyboard as pynput_keyboard
     PYNPUT_AVAILABLE = True
 except:
