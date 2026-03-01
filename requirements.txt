@@ -2,3 +2,4 @@ flask
 pynput
 pystray
 pillow
+certifi

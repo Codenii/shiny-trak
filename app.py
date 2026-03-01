@@ -21,9 +21,14 @@ except:
 if getattr(sys, 'frozen', False):
     _BASE_DIR = os.path.dirname(sys.executable)
     _TEMPLATE_DIR = os.path.join(sys._MEIPASS, 'templates')
+
+    import certifi
+    os.environ['SSL_CERT_FILE'] = certifi.where()
+    os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 else:
     _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     _TEMPLATE_DIR = os.path.join(_BASE_DIR, 'templates')
+
 
 app = Flask(__name__, template_folder=_TEMPLATE_DIR)
 
