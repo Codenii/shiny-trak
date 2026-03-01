@@ -7,6 +7,7 @@ import urllib.error
 import sys
 import webbrowser
 import uuid
+import platform
 from queue import Queue, Empty
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
@@ -368,38 +369,66 @@ if __name__ == "__main__":
         webbrowser.open('http://localhost:3000')
     threading.Thread(target=_open_browser, daemon=True).start()
 
-    try:
-        from PIL import Image, ImageDraw
-        import pystray
+    if platform.system() == 'Darwin':
+        try:
+            import rumps
 
-        def _make_icon():
-            img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
-            ImageDraw.Draw(img).ellipse([2, 2, 62, 62], fill=(147, 51, 234, 255))
-            return img
-        
-        def _quit(icon, item):
-            icon.stop()
-            os._exit(0)
+            class _TrayApp(rumps.App):
+                def __init__(self):
+                    super().__init__("✨ Shiny Trak", quit_button=None)
+                    self.menu = [
+                        rumps.MenuItem('Open Control Panel', callback=self.open_panel),
+                        None,
+                        rumps.MenuItem('Quit', callback=self.quit_app)
+                    ]
 
-        tray = pystray.Icon(
-            'Shiny Trak',
-            _make_icon(),
-            'Shiny Trak',
-            menu=pystray.Menu(
-                pystray.MenuItem('Open Control Panel', lambda i, it: webbrowser.open('http://localhost:3000')),
-                pystray.MenuItem('Quit', _quit),
+                def open_panel(self, _):
+                    webbrowser.open('http://localhost:3000')
+
+                def quit_app(self, _):
+                    os._exit(0)
+            
+            threading.Thread(
+                target=lambda: app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False),
+                daemon=True
+            ).start()
+            _TrayApp().run()
+        except ImportError:
+            print("Shiny Trak running at        http://localhost:3000")
+            app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False)
+    else:
+        try:
+            from PIL import Image, ImageDraw
+            import pystray
+
+            def _make_icon():
+                img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+                ImageDraw.Draw(img).ellipse([2, 2, 62, 62], fill=(147, 51, 234, 255))
+                return img
+            
+            def _quit(icon, item):
+                icon.stop()
+                os._exit(0)
+
+            tray = pystray.Icon(
+                'Shiny Trak',
+                _make_icon(),
+                'Shiny Trak',
+                menu=pystray.Menu(
+                    pystray.MenuItem('Open Control Panel', lambda i, it: webbrowser.open('http://localhost:3000')),
+                    pystray.MenuItem('Quit', _quit),
+                )
             )
-        )
 
-        threading.Thread(
-            target=lambda: app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False),
-            daemon=True
-        ).start()
-        tray.run()
-    except ImportError:
-        print("Shiny Trak running at    http://localhost:3000")
-        print("OBS overlay URL:         http://localhost:3000/overlay")
-        print("Control Panel URL:       http://localhost:3000/")
-        if not PYNPUT_AVAILABLE:
-            print("WARNING: pynput not installed - hotkeys unavailable")
-        app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False)
+            threading.Thread(
+                target=lambda: app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False),
+                daemon=True
+            ).start()
+            tray.run()
+        except ImportError:
+            print("Shiny Trak running at    http://localhost:3000")
+            print("OBS overlay URL:         http://localhost:3000/overlay")
+            print("Control Panel URL:       http://localhost:3000/")
+            if not PYNPUT_AVAILABLE:
+                print("WARNING: pynput not installed - hotkeys unavailable")
+            app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False)
