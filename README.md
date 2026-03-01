@@ -1,5 +1,10 @@
 # Shiny Trak
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)                                                                                 
+  [![GitHub release](https://img.shields.io/github/v/release/Codenii/shiny-trak)](https://github.com/Codenii/shiny-trak/releases/latest)
+  [![CI](https://github.com/Codenii/shiny-trak/actions/workflows/build.yml/badge.svg)](https://github.com/Codenii/shiny-trak/actions/workflows/build.yml)
+  [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-blue)](https://github.com/Codenii/shiny-trak/releases/latest)
+
 A local web-based shiny Pokemon hunt tracker with a real-time OBS overlay. Track multiple hunts simultaneously, configure per-hunt display modes, and      
 increment counters via global hotkeys without leaving your game.
 

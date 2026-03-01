@@ -1,0 +1,52 @@
+name: Build and Release
+
+on:
+    release:
+        types: [created]
+
+permissions:
+    contents: write
+
+jobs:
+    build:
+        strategy:
+            matrix:
+                include:
+                    - os: windows-latest
+                      artifact_path: dist/ShinyTrak.exe
+                    - os: macos-latest
+                      artifact_path: dist/ShinyTrak.app.zip
+                    - os: ubuntu-latest
+                      artifact_path: dist/ShinyTrak
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+            
+            - name: Install dependencies
+              run: pip install -r requirements.txt pyinstaller pystray pillow
+
+            - name: Build (Windows)
+              if: runner.os == 'Windows'
+              run: pyinstaller --onefile --noconsole --add-data "templates;templates" --name ShinyTrak app.py
+
+            - name: Build (macOS)
+              if: runner.os == 'macOS'
+              run: pyinstaller --onefile --windowed --add-data "templates:templates" --name ShinyTrak app.py
+
+            - name: Build (Linux)
+              if: runner.os == 'Linux'
+              run: pyinstaller --onefile --add-data "templates:templates" --name ShinyTrak app.py
+
+            - name: Zip macOS app
+              if: runner.os == 'macOS'
+              run: cd dist && zip -r ShinyTrak.app.zip ShinyTrak.app
+
+            - name: Upload to release
+              uses: softprops/action-gh-release@v2
+              with:
+                files: ${{ matrix.artifact_path }}
