@@ -58,8 +58,11 @@ python3 app.py`
 macOS will block the app on first launch because it is not signed by an Apple-registered developer.
 
 **To open it:**
-1. Right-click `ShinyTrak.app` → **Open**
-2. Click **Open** in the dialog that appears
+1. Unzip and move `ShinyTrak.app` to your Applications folder
+2. Open Terminal and run:
+   `xattr -cr /Applications/ShinyTrak.app`
+3. Right-click `ShinyTrak.app` → **Open**
+4. Click **Open** in the dialog that appears
 
 You only need to do this once. If that doesn't work, go to **System Settings → Privacy & Security**, scroll down to the blocked app message, and click
 **Open Anyway**.
