@@ -4,6 +4,8 @@ import threading
 import time
 import urllib.request
 import urllib.error
+import sys
+import webbrowser
 import uuid
 from queue import Queue, Empty
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
@@ -15,10 +17,16 @@ except:
     PYNPUT_AVAILABLE = False
     print("[hotkeys] pynput not available - hotkeys disabled")
 
+if getattr(sys, 'frozen', False):
+    _BASE_DIR = os.path.dirname(sys.executable)
+    _TEMPLATE_DIR = os.path.join(sys._MEIPASS, 'templates')
+else:
+    _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    _TEMPLATE_DIR = os.path.join(_BASE_DIR, 'templates')
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=_TEMPLATE_DIR)
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+DATA_DIR = os.path.join(_BASE_DIR, 'data')
 DATA_FILE = os.path.join(DATA_DIR, "hunts.json")
 
 _pokemon_list_cache = None
@@ -345,9 +353,44 @@ def pokemon_list():
 # Start
 if __name__ == "__main__":
     rebuild_hotkeys()
-    print("Shiny Trak running at    http://localhost:3000")
-    print("OBS overlay URL:         http://localhost:3000/overlay")
-    print("Control Panel:           http://localhost:3000/")
-    if not PYNPUT_AVAILABLE:
-        print("WARNING: pynput not installed - hotkeys unavailable")
-    app.run(host="0.0.0.0", port=3000, threaded=True)
+
+    def _open_browser():
+        time.sleep(1.5)
+        webbrowser.open('http://localhost:3000')
+    threading.Thread(target=_open_browser, daemon=True).start()
+
+    try:
+        from PIL import Image, ImageDraw
+        import pystray
+
+        def _make_icon():
+            img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+            ImageDraw.Draw(img).ellipse([2, 2, 62, 62], fill=(147, 51, 234, 255))
+            return img
+        
+        def _quit(icon, item):
+            icon.stop()
+            os._exit(0)
+
+        tray = pystray.Icon(
+            'Shiny Trak',
+            _make_icon(),
+            'Shiny Trak',
+            menu=pystray.Menu(
+                pystray.MenuItem('Open Control Panel', lambda i, it: webbrowser.open('http://localhost:3000')),
+                pystray.MenuItem('Quit', _quit),
+            )
+        )
+
+        threading.Thread(
+            target=lambda: app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False),
+            daemon=True
+        ).start()
+        tray.run()
+    except ImportError:
+        print("Shiny Trak running at    http://localhost:3000")
+        print("OBS overlay URL:         http://localhost:3000/overlay")
+        print("Control Panel URL:       http://localhost:3000/")
+        if not PYNPUT_AVAILABLE:
+            print("WARNING: pynput not installed - hotkeys unavailable")
+        app.run(host='0.0.0.0', port=3000, threaded=True, use_reloader=False)

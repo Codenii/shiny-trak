@@ -1,2 +1,4 @@
 flask
 pynput
+pystray
+pillow
