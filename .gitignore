@@ -25,3 +25,4 @@ data/
 build/
 dist/
 *.spec
+Releases/
