@@ -159,3 +159,8 @@ source in OBS.
 **Port 3000 already in use**
 Another application is using port 3000. Quit that application, or if running from source, edit the last line of `app.py` to use a different port and update
 the OBS browser source URL to match.
+
+## Roadmap
+Shiny Trak is actively being developed. Planned features include a native desktop UI, hunt history, multiple additional overlays, statistics tracking, and more.  
+
+See the full [Roadmap](ROADMAP.md) for details.
