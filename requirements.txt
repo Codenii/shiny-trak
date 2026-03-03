@@ -3,4 +3,4 @@ pynput
 pystray
 pillow
 certifi
-pywebview
+pywebview==6.1
