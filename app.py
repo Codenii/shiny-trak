@@ -626,6 +626,7 @@ if __name__ == "__main__":
             height=700,
             min_size=(820, 560),
             text_select=False,
+            background_color="#0D0B1A",
         )
         _webview_window.events.closing += _on_closing
         webview.start(func=_setup_tray, args=(_webview_window,))
