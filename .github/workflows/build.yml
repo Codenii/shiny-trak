@@ -36,15 +36,15 @@ jobs:
 
             - name: Build (Windows)
               if: runner.os == 'Windows'
-              run: pyinstaller --onefile --noconsole --add-data "templates;templates" --hidden-import webview --hidden-import webview.platforms.winforms --name ShinyTrak app.py
+              run: pyinstaller --onefile --noconsole --add-data "templates;templates" --hidden-import webview --hidden-import webview.platforms.winforms --add-data "static;static" --name ShinyTrak app.py
 
             - name: Build (macOS)
               if: runner.os == 'macOS'
-              run: pyinstaller --windowed --add-data "templates:templates" --hidden-import webview --hidden-import webview.platforms.cocoa --hidden-import AppKit --hidden-import objc --name ShinyTrak app.py
+              run: pyinstaller --windowed --add-data "templates:templates" --hidden-import webview --hidden-import webview.platforms.cocoa --hidden-import AppKit --hidden-import objc --add-data "static:static" --name ShinyTrak app.py
 
             - name: Build (Linux)
               if: runner.os == 'Linux'
-              run: pyinstaller --onefile --add-data "templates:templates" --hidden-import webview --hidden-import webview.platforms.gtk --name ShinyTrak app.py
+              run: pyinstaller --onefile --add-data "templates:templates" --hidden-import webview --hidden-import webview.platforms.gtk --add-data "static:static" --name ShinyTrak app.py
 
             - name: Zip macOS app
               if: runner.os == 'macOS'

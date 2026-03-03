@@ -40,6 +40,7 @@ except ImportError:
 if getattr(sys, "frozen", False):
     _BASE_DIR = os.path.dirname(sys.executable)
     _TEMPLATE_DIR = os.path.join(sys._MEIPASS, "templates")
+    _STATIC_DIR = os.path.join(sys._MEIPASS, "static")
 
     import certifi
 
@@ -48,9 +49,10 @@ if getattr(sys, "frozen", False):
 else:
     _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     _TEMPLATE_DIR = os.path.join(_BASE_DIR, "templates")
+    _STATIC_DIR = os.path.join(_BASE_DIR, "static")
 
 
-app = Flask(__name__, template_folder=_TEMPLATE_DIR)
+app = Flask(__name__, template_folder=_TEMPLATE_DIR, static_folder=_STATIC_DIR)
 
 DATA_DIR = os.path.join(_BASE_DIR, "data")
 DATA_FILE = os.path.join(DATA_DIR, "hunts.json")

@@ -26,3 +26,6 @@ build/
 dist/
 *.spec
 Releases/
+
+# Node
+node_modules/
