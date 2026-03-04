@@ -38,7 +38,8 @@ Download the latest release for your platform from the [Releases](../../releases
 **Linux**: Install the required system libraries, then make the file executable, then run it:
 `sudo apt-get install -y gir1.2-gtk-3.0 gir1.2-webkit2-4.1`
 `chmod +x ShinyTrak
-./ShinyTrak`
+./ShinyTrak`. 
+_Note: The Linux build is currently untested on physical hardware. Hotkeys and the system tray may not work depending on your desktop environment_
 
 ### Running from Source
 
@@ -74,8 +75,7 @@ You only need to do this once. If that doesn't work, go to **System Settings →
 
 ### Starting and Stopping
 
-When launched, Shiny Trak automatically opens the control panel in your browser. A tray icon appears in your system tray (Windows/macOS) — right-click it
-to reopen the control panel or quit.
+When launched, Shiny Trak automatically opens the control panel in your browser. A tray icon appears in your system tray (Windows/macOS; Linux support varies by desktop environment) — right-click it to reopen the control panel or quit.
 
 To shut down from the browser, click the **⏻ Shut Down** button at the top of the control panel.
 
@@ -111,7 +111,8 @@ The overlay has a transparent background and will update instantly whenever you 
 
 ### Windows and Linux
 
-Hotkeys work out of the box. In the control panel, click **Set** next to a hunt and press any key combination. The hotkey will fire globally even when the
+Hotkeys work out of the box on Windows. Linux support is untested - hotkeys may require additional setup depending on your desktop environment and input configuration.  
+In the control panel, click **Set** next to a hunt and press any key combination. The hotkey will fire globally even when the
 app is not focused.
 
 > **Note for Linux users**: pynput may require adding your user to the `input` group:

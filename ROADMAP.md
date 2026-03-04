@@ -6,7 +6,7 @@ Progress on each version can be tracked via [GitHub Milestones](https://github.c
 
 ---
 
-## Current Release - v1.0.5
+## Current Release - v1.1.0
 Current public release.  
 **Core Features:**  
 - Multiple concurrent shiny tracking
@@ -14,16 +14,13 @@ Current public release.
 - Global hotkeys (Windows/Linux via pynput, macOS via Hammerspoon)
 - Pokemon auto-complete with shiny sprites provided by [PokeAPI](https://pokeapi.co)
 - System tray / menu bar icon
+- Native desktop window via PyWebView (no longer need to use a separate browser tab)
+- Full UI overhaul using Alpine.js and Tailwind CSS
+- Improved layout, animations, and overall polish
 
 ---
 
 ## Upcoming Releases
-
-### v1.1.0 - Desktop Application
-Shiny Trak becomes a proper desktop application with a much improved user interface.
-- Native desktop window via PyWebView (no longer need to use a separate browser tab)
-- Full UI overhaul using Alpine.js and Tailwind CSS
-- Improved layout, animations, and overall polish
 
 ### v1.2.0 - Hunt History
 Hunts become more in-depth and completed hunts are preserved rather than deleted.
@@ -76,3 +73,4 @@ An optional web platform for sharing hunt history and statistics publicly.
 - **v1.0.3** - Switched to Rumps for macOS menu bar
 - **v1.0.4** - Further macOS bundle fixes
 - **v1.0.5** - Disabled pynput on macOS to resolve crash on hotkey setup
+- **v1.1.0** - Native desktop window via PyWebView, full UI overhaul
