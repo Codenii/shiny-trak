@@ -306,6 +306,8 @@ def update_hunt(hunt_id):
         "hotkeyDecrement",
         "spriteUrl",
         "count",
+        "game",
+        "notes",
     }
     for k in allowed:
         if k in data:
