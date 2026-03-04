@@ -35,7 +35,8 @@ Download the latest release for your platform from the [Releases](../../releases
 
 **macOS**: Unzip and move `ShinyTrak.app` to your Applications folder. See [First Launch on macOS](#first-launch-on-macos) below.
 
-**Linux**: Make the file executable, then run it:
+**Linux**: Install the required system libraries, then make the file executable, then run it:
+`sudo apt-get install -y gir1.2-gtk-3.0 gir1.2-webkit2-4.1`
 `chmod +x ShinyTrak
 ./ShinyTrak`
 
