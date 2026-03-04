@@ -35,17 +35,31 @@
                     <span class="text-xl">✨</span>
                     <div>
                         <div class="text-sm font-bold tracking-wide text-white">Shiny Trak</div>
-                        <div class="text-xs text-accent-muted/60 font-medium" x-text="`${hunts.length} active hunt${hunts.length !== 1 ? 's' : ''}`"></div>
+                        <div class="text-xs text-accent-muted/60 font-medium" x-text="`${hunts.filter(h => h.status === 'active' || !h.status).length} active hunt${hunts.filter(h => h.status === 'active' || !h.status).length !== 1 ? 's' : ''}`"></div>
                     </div>
                 </div>
             </div>
             <!-- Nav -->
             <nav class="flex-1 px-3 py-3 space-y-0.5">
-                <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 border-l-2 border-primary cursor-default">
-                    <svg class="w-4 h-4 text-primary-light flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div
+                    @click="activeTab = 'hunts'"
+                    :class="activeTab === 'hunts' ? 'bg-primary/20 border-l-2 border-primary cursor-default' : 'border-l-2 border-transparent hover:bg-white/5 cursor-pointer'"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-150"
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" :class="activeTab === 'hunts' ? 'text-primary-light' : 'text-white/40'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <span class="text-sm font-medium text-white">Hunts</span>
+                    <span class="text-sm font-medium" :class="activeTab === 'hunts' ? 'text-white' : 'text-white/40'">Hunts</span>
+                </div>
+                <div
+                    @click="activeTab = 'history'"
+                    :class="activeTab === 'history' ? 'bg-primary/20 border-l-2 border-primary' : 'border-l-2 border-transparent hover:bg-white/5'"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150"
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" :class="activeTab === 'history' ? 'text-primary-light' : 'text-white/40'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-sm font-medium" :class="activeTab === 'history' ? 'text-white' : 'text-white/40'">History</span>
                 </div>
             </nav>
 
@@ -60,6 +74,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                     <span class="text-sm font-medium" x-text="overlayUrlCopied ? 'Copied!' : 'Copy Overlay URL'"></span>
+                </button>
+
+                <!-- Export -->
+                <button
+                    @click="showExport = true"
+                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-accent-muted/70 hover:text-accent-muted hover:bg-white/5 transition-colors duration-150"
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span class="text-sm font-medium">Export</span>
                 </button>
 
                 <!-- Settings -->
@@ -125,6 +150,20 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Game (optional) -->
+                    <div>
+                        <label class="block text-xs font-medium text-accent-muted/70 mb-1.5 uppercase tracking-wider">Game <span class="text-white/20 normal-case tracking-normal">(optional)</span></label>
+                        <select
+                            x-model="newHunt.game"
+                            @change="onGameChange()"
+                            class="bg-bg-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/60 transition-colors duration-150 cursor-pointer"
+                        >
+                            <option value="">Any Game</option>
+                            <template x-for="game in games" :key="game">
+                                <option :value="game" x-text="game"></option>
+                            </template>
+                        </select>
+                    </div>
                     <!-- Display Mode -->
                     <div>
                         <label class="block text-xs font-medium text-accent-muted/70 mb-1.5 uppercase tracking-wider">Display</label>
@@ -157,10 +196,10 @@
                 ></p>
             </div>
             <!-- Hunt List -->
-            <div class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+            <div x-show="activeTab === 'hunts'" class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
                 <!-- Empty State -->
                 <div
-                    x-show="hunts.length === 0"
+                    x-show="hunts.filter(h => h.status === 'active' || !h.status).length === 0"
                     class="flex flex-col items-center justify-center h-full text-center py-16"
                 >
                     <div class="text-5xl mb-4">✨</div>
@@ -168,7 +207,7 @@
                     <div class="text-white/20 text-xs mt-1">Search for a Pokemon above to get started</div>
                 </div>
                 <!-- Hunt Cards -->
-                <template x-for="hunt in hunts" :key="hunt.id">
+                <template x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)" :key="hunt.id">
                     <div class="bg-bg-card border border-white/8 rounded-xl p-4 flex items-center gap-4 hover:border-white/15 transition-colors duration-150">
                         <!-- Sprite -->
                         <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center">
@@ -274,6 +313,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                             </button>
+                            <button
+                                @click="markFound(hunt)"
+                                title="Mark as Found"
+                                class="w-7 h-7 flex items-center justify-center rounded-lg text-white/25 hover:text-accent-muted hover:bg-accent-muted/10 transition-colors duration-150"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
                             <!-- Delete -->
                             <button
                                 @click="deleteHunt(hunt.id)"
@@ -285,6 +333,58 @@
                                 </svg>
                             </button>
                         </div>
+                    </div>
+                </template>
+            </div>
+            <!-- History -->
+            <div x-show="activeTab === 'history'" class="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+                <!-- Empty State -->
+                <div
+                    x-show="hunts.filter(h => h.status === 'completed').length === 0"
+                    class="flex flex-col items-center justify-center h-full text-center py-16"
+                >
+                    <div class="text-5xl mb-4">🏆</div>
+                    <div class="text-white/40 text-sm font-medium">No completed hunts yet</div>
+                    <div class="text-white/20 text-xs mt-1">Mark a hunt as found to see it here</div>
+                </div>
+                <!-- Completed Hunt Cards -->
+                <template x-for="hunt in hunts.filter(h => h.status === 'completed')" :key="hunt.id">
+                    <div class="bg-bg-card border border-white/8 rounded-xl p-4 flex items-center gap-4 hover:border-white/15 transition-colors duration-150">
+                        <!-- Sprite -->
+                        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+                            <template x-if="hunt.spriteUrl">
+                                <img :src="hunt.spriteUrl" :alt="hunt.displayName" class="w-12 h-12 object-contain" style="image-rendering: pixelated;" />
+                            </template>
+                            <template x-if="!hunt.spriteUrl">
+                                <div class="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-lg">✨</div>
+                            </template>
+                        </div>
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-white truncate" x-text="hunt.displayName"></span>
+                                <span x-show="hunt.game" class="text-xs text-white/30 truncate" x-text="hunt.game"></span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-0.5">
+                                <span class="text-xs text-white/30">
+                                    <span x-text="new Date(hunt.startDate * 1000).toLocaleDateString()"></span>
+                                    <span x-show="hunt.endDate"> → <span x-text="new Date(hunt.endDate * 1000).toLocaleDateString()"></span></span>
+                                </span>
+                            </div>
+                            <div x-show="hunt.notes" class="mt-1 text-xs text-accent-muted/60 italic truncate" x-text="hunt.notes"></div>
+                        </div>
+                        <!-- Final Count -->
+                        <div class="flex-shrink-0 text-gold font-bold text-lg tabular-nums" x-text="hunt.count.toLocaleString('en-US')"></div>
+                        <!-- Delete -->
+                        <button
+                            @click="deleteHunt(hunt.id)"
+                            title="Delete"
+                            class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-white/25 hover:text-danger hover:bg-danger/10 transition-colors duration-150"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
                     </div>
                 </template>
             </div>
@@ -355,13 +455,20 @@
     <script>
         function app() {
             return {
+                activeTab: 'hunts',
                 hunts: [],
                 pokemonNames: [],
                 acOptions: [],
+                games: [],
+                gamePokemonNames: [],
+                showMarkFound: false,
+                markFoundHunt: null,
+                markFoundNotes: '',
+                showExport: false,
                 acHighlight: -1,
-                newHunt: { name: '', mode: 'full', error: '', loading: false },
+                newHunt: { name: '', game: '', mode: 'full', error: '', loading: false },
                 capture: { huntId: null, field: null },
-                settings: { close_behavior: 'ask' },
+                settings: { close_behavior: 'ask', mark_found_behavior: 'ask' },
                 showCloseDialog: false,
                 showSettings: false,
                 overlayUrlCopied: false,
@@ -370,9 +477,12 @@
                 // Lifecycle
                 async init() {
                     const s = await fetch('/api/settings').then(r => r.json())
-                    this.settings = s
+                    this.settings = { ...this.settings, ...s }
                     fetch('/api/pokemon-list').then(r => r.json()).then(names => {
                         this.pokemonNames = names
+                    })
+                    fetch('/api/games').then(r => r.json()).then(games => {
+                        this.games = games
                     })
                     this.connect()
                     window.addEventListener('show-close-dialog', () => {
@@ -396,8 +506,19 @@
                 updateAutocomplete() {
                     const q = this.newHunt.name.toLowerCase().trim()
                     if (!q) { this.acOptions = []; this.acHighlight = -1; return }
-                    this.acOptions = this.pokemonNames.filter(n => n.startsWith(q)).slice(0, 8)
+                    const list = this.newHunt.game && this.gamePokemonNames.length
+                        ? this.gamePokemonNames
+                        : this.pokemonNames
+                    this.acOptions = list.filter(n => n.startsWith(q)).slice(0, 8)
                     this.acHighlight = -1
+                },
+
+                async onGameChange() {
+                    this.gamePokemonNames = []
+                    this.acOptions = []
+                    if (!this.newHunt.game) return
+                    const result = await fetch(`/api/pokemon-list/game/${encodeURIComponent(this.newHunt.game)}`).then(r => r.json())
+                    if (Array.isArray(result)) this.gamePokemonNames = result
                 },
 
                 selectAc(option) {
@@ -423,6 +544,7 @@
                                 displayName: pokemon.displayName,
                                 spriteUrl: pokemon.spriteUrl,
                                 displayMode: this.newHunt.mode,
+                                game: this.newHunt.game || null,
                             })
                         })
                         this.newHunt.name = ''
@@ -440,6 +562,29 @@
                 
                 async resetHunt(id) {
                     await fetch(`/api/hunts/${id}/reset`, { method: 'POST' })
+                },
+
+                markFound(hunt) {
+                    const behavior = this.settings.mark_found_behavior
+                    if (behavior === 'never') {
+                        fetch(`/api/hunts/${hunt.id}/complete`, { method: 'POST' })
+                        return
+                    }
+                    this.markFoundHunt = hunt
+                    this.markFoundNotes = hunt.notes || ''
+                    this.showMarkFound = true
+                },
+
+                async confirmMarkFound() {
+                    if (!this.markFoundHunt) return
+                    await fetch(`/api/hunts/${this.markFoundHunt.id}/complete`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ notes: this.markFoundNotes })
+                    })
+                    this.showMarkFound = false
+                    this.markFoundHunt = null
+                    this.markFoundNotes = ''
                 },
 
                 async updateMode(id, mode) {
@@ -566,6 +711,10 @@
                     await navigator.clipboard.writeText('http://localhost:3000/overlay')
                     this.overlayUrlCopied = true
                     setTimeout(() => this.overlayUrlCopied = false, 2000)
+                },
+
+                exportHunts(scope, fmt) {
+                    window.location.href = `/api/export?scope=${scope}&format=${fmt}`
                 },
             }
         }
