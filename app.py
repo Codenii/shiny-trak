@@ -19,7 +19,7 @@ from flask import (
 
 
 try:
-    if platform.system() == "Darwin" and getattr(sys, "frozen", False):
+    if platform.system() == "Darwin":
         raise ImportError
     from pynput import keyboard as pynput_keyboard
 
@@ -64,6 +64,8 @@ _macos_tray_refs = {}
 _pokemon_list_cache = None
 
 _quitting = False
+
+_http_opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 # SSE Client Registry
@@ -329,7 +331,7 @@ def lookup_pokemon(name):
     url = f"https://pokeapi.co/api/v2/pokemon/{name.lower().strip()}"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "shiny-trak/1.0"})
-        with urllib.request.urlopen(req, timeout=8) as resp:
+        with _http_opener.open(req, timeout=8) as resp:
             data = json.loads(resp.read())
         display = data["name"].replace("-", " ").title()
         return jsonify(
@@ -429,7 +431,7 @@ def pokemon_list():
             "https://pokeapi.co/api/v2/pokemon?limit=10000",
             headers={"User-Agent": "shiny-trak/1.0"},
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with _http_opener.open(req, timeout=10) as resp:
             data = json.loads(resp.read())
         _pokemon_list_cache = [p["name"] for p in data["results"]]
         return jsonify(_pokemon_list_cache)
@@ -562,7 +564,15 @@ def _create_macos_status_item(window):
 
 def _setup_tray(window):
     if platform.system() == "Darwin":
-        _create_macos_status_item(window)
+        import ctypes
+        _lib = ctypes.CDLL('/usr/lib/system/libdispatch.dylib')
+        _CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p)
+        _cb = _CB(lambda _: _create_macos_status_item(window))
+        _macos_tray_refs['_dispatch_cb'] = _cb
+        _lib.dispatch_async_f.argtypes = [ctypes.c_void_p, ctypes.c_void_p, _CB]
+        _lib.dispatch_async_f.restype = None
+        _main_q = ctypes.addressof(ctypes.c_char.in_dll(_lib, '_dispatch_main_q'))
+        _lib.dispatch_async_f(_main_q, None, _cb)
     else:
         _setup_tray_pystray(window)
 
