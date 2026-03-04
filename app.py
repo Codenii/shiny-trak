@@ -1,5 +1,7 @@
-import json
 import os
+import csv
+import io
+import json
 import threading
 import time
 import urllib.request
@@ -58,6 +60,35 @@ DATA_DIR = os.path.join(_BASE_DIR, "data")
 DATA_FILE = os.path.join(DATA_DIR, "hunts.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 
+GAMES_CACHE_DIR = os.path.join(DATA_DIR, "game_cache")
+
+GAME_POKEDEX_MAP: dict[str, list[str]] = {
+    "Red / Blue": ["kanto"],
+    "Yellow": ["kanto"],
+    "Gold / Silver": ["original-johto"],
+    "Crystal": ["original-johto"],
+    "Ruby / Sapphire": ["hoenn"],
+    "FireRed / LeafGreen": ["kanto"],
+    "Emerald": ["hoenn"],
+    "Diamond / Pearl": ["original-sinnoh"],
+    "Platinum": ["extended-sinnoh"],
+    "HeartGold / SoulSilver": ["updated-johto"],
+    "Black / White": ["original-unova"],
+    "Black 2 / White 2": ["updated-unova"],
+    "X / Y": ["kalos-central", "kalos-coastal", "kalos-mountain"],
+    "Omega Ruby / Alpha Sapphire": ["updated-hoenn"],
+    "Sun / Moon": ["original-alola"],
+    "Ultra Sun / Ultra Moon": ["updated-alola"],
+    "Let's Go Pikachu / Eevee": ["letsgo-kanto"],
+    "Sword / Shield": ["galar", "isle-of-armor", "crown-tundra"],
+    "Brilliant Diamond / Shining Pearl": ["updated-sinnoh"],
+    "Legends: Arceus": ["hisui"],
+    "Scarlet / Violet": ["paldea", "kitakami", "blueberry"],
+    "Legends: Z-A": ["kalos-central", "kalos-coastal", "kalos-mountain"],
+}
+
+_game_pokemon_cache: dict[str, list[str]] = {}
+
 _webview_window = None
 _macos_tray_refs = {}
 
@@ -97,14 +128,19 @@ def save_hunts(hunts: list) -> None:
 
 
 def load_settings() -> dict:
+    defaults = {
+        "close_behavior": "ask",
+        "mark_found_behavior": "ask",
+    }
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(SETTINGS_FILE):
-        return {"close_behavior": "ask"}
+        return defaults
     try:
         with open(SETTINGS_FILE) as f:
-            return json.load(f)
+            saved = json.load(f)
+        return {**defaults, **saved}
     except (json.JSONDecodeError, OSError):
-        return {"close_behavior": "ask"}
+        return defaults
 
 
 def save_settings(settings: dict) -> None:
@@ -240,6 +276,11 @@ def add_hunt():
         "displayMode": data.get("displayMode", "full"),
         "hotkey": data.get("hotkey") or None,
         "hotkeyDecrement": data.get("hotkeyDecrement") or None,
+        "game": data.get("game") or None,
+        "notes": "",
+        "status": "active",
+        "startDate": time.time(),
+        "endDate": None,
         "createdAt": time.time(),
     }
     hunts = load_hunts()
@@ -565,13 +606,14 @@ def _create_macos_status_item(window):
 def _setup_tray(window):
     if platform.system() == "Darwin":
         import ctypes
-        _lib = ctypes.CDLL('/usr/lib/system/libdispatch.dylib')
+
+        _lib = ctypes.CDLL("/usr/lib/system/libdispatch.dylib")
         _CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p)
         _cb = _CB(lambda _: _create_macos_status_item(window))
-        _macos_tray_refs['_dispatch_cb'] = _cb
+        _macos_tray_refs["_dispatch_cb"] = _cb
         _lib.dispatch_async_f.argtypes = [ctypes.c_void_p, ctypes.c_void_p, _CB]
         _lib.dispatch_async_f.restype = None
-        _main_q = ctypes.addressof(ctypes.c_char.in_dll(_lib, '_dispatch_main_q'))
+        _main_q = ctypes.addressof(ctypes.c_char.in_dll(_lib, "_dispatch_main_q"))
         _lib.dispatch_async_f(_main_q, None, _cb)
     else:
         _setup_tray_pystray(window)
