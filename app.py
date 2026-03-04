@@ -196,8 +196,9 @@ def rebuild_hotkeys() -> None:
             hotkey_listener = None
 
         hunts = load_hunts()
+        active_hunts = [h for h in hunts if h.get("status", "active") == "active"]
         hotkey_map = {}
-        for h in hunts:
+        for h in active_hunts:
             if h.get("hotkey"):
                 hotkey_map[h["hotkey"]] = lambda hid=h["id"]: increment_hunt_by_id(hid)
             if h.get("hotkeyDecrement"):
@@ -369,6 +370,23 @@ def reset(hunt_id):
     return jsonify(hunt)
 
 
+@app.post("/api/hunts/<hunt_id>/complete")
+def complete_hunt(hunt_id):
+    hunts = load_hunts()
+    hunt = next((h for h in hunts if h["id"] == hunt_id), None)
+    if hunt is None:
+        return jsonify({"error": "not found"}), 404
+    data = request.json or {}
+    hunt["status"] = "completed"
+    hunt["endDate"] = time.time()
+    if "notes" in data:
+        hunt["notes"] = data["notes"]
+    save_hunts(hunts)
+    broadcast(hunts)
+    rebuild_hotkeys()
+    return jsonify(hunt)
+
+
 @app.get("/api/pokemon/<name>")
 def lookup_pokemon(name):
     url = f"https://pokeapi.co/api/v2/pokemon/{name.lower().strip()}"
@@ -482,6 +500,132 @@ def pokemon_list():
         return jsonify([])
 
 
+@app.get("/api/pokemon-list/game/<path:game>")
+def pokemon_list_by_game(game):
+    if game not in GAME_POKEDEX_MAP:
+        return jsonify({"error": "Unknown game"}), 404
+
+    # In memory cache hit
+    if game in _game_pokemon_cache:
+        return jsonify(_game_pokemon_cache[game])
+
+    # Disk cache hit (30 day expiry)
+    os.makedirs(GAMES_CACHE_DIR, exist_ok=True)
+    cache_file = os.path.join(
+        GAMES_CACHE_DIR, f"{game.replace('/', '_').replace(' ', '_')}.json"
+    )
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file) as f:
+                cached = json.load(f)
+            if time.time() - cached.get("ts", 0) < 86400 * 30:
+                _game_pokemon_cache[game] = cached["names"]
+                return jsonify(cached["names"])
+        except (json.JSONDecodeError, OSError, KeyError):
+            pass
+
+    # Fetch from PokeAPI
+    names = set()
+    for pokedex_id in GAME_POKEDEX_MAP[game]:
+        try:
+            url = f"https://pokeapi.co/api/v2/pokedex/{pokedex_id}/"
+            req = urllib.request.Request(url, headers={"User-Agent": "shiny-trak/1.0"})
+            with _http_opener.open(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+            for entry in data["pokemon_entries"]:
+                names.add(entry["pokemon_species"]["name"])
+        except Exception:
+            pass
+
+    if not names:
+        return jsonify({"error": "Failed to fetch game data"}), 502
+
+    result = sorted(names)
+
+    # Write disk cache
+    try:
+        with open(cache_file, "w") as f:
+            json.dump({"ts": time.time(), "names": result}, f)
+    except OSError:
+        pass
+
+    _game_pokemon_cache[game] = result
+    return jsonify(result)
+
+
+@app.post("/api/pokemon-list/game/<path:game>/refresh")
+def refresh_game_cache(game):
+    if game not in GAME_POKEDEX_MAP:
+        return jsonify({"error": "Unknown game"}), 404
+
+    # Clear caches and re-fetch data
+    _game_pokemon_cache.pop(game, None)
+    cache_file = os.path.join(
+        GAMES_CACHE_DIR, f"{game.replace('/', '_').replace(' ', '_')}.json"
+    )
+    try:
+        os.remove(cache_file)
+    except OSError:
+        pass
+
+    return pokemon_list_by_game(game)
+
+
+@app.get("/api/export")
+def export_hunts():
+    scope = request.args.get("scope", "all")
+    fmt = request.args.get("format", "json")
+
+    hunts = load_hunts()
+    if scope == "active":
+        hunts = [h for h in hunts if h.get("status", "active") == "active"]
+    elif scope == "completed":
+        hunts = [h for h in hunts if h.get("status") == "completed"]
+
+    if fmt == "csv":
+        fields = [
+            "displayName",
+            "pokemon",
+            "game",
+            "count",
+            "status",
+            "startDate",
+            "endDate",
+            "notes",
+        ]
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
+        writer.writeheader()
+        for h in hunts:
+            row = dict(h)
+            row["startDate"] = (
+                time.strftime("%Y-%m-%d", time.localtime(h["startDate"]))
+                if h.get("startDate")
+                else ""
+            )
+            row["endDate"] = (
+                time.strftime("%Y-%m-%d", time.localtime(h["endDate"]))
+                if h.get("endDate")
+                else ""
+            )
+            writer.writerow(row)
+        csv_data = output.getvalue()
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=shiny-trak-{scope}.csv"
+            },
+        )
+    return Response(
+        json.dumps(hunts, indent=2),
+        mimetype="application/json",
+        headers={
+            "Content-Disposition": f"attachment; filename=shiny-trak-{scope}.json"
+        },
+    )
+
+
 @app.post("/api/shutdown")
 def shutdown():
     def _stop():
@@ -501,11 +645,16 @@ def get_settings():
 def update_settings():
     data = request.json or {}
     settings = load_settings()
-    for k in {"close_behavior"}:
+    for k in {"close_behavior", "mark_found_behavior"}:
         if k in data:
             settings[k] = data[k]
     save_settings(settings)
     return jsonify(settings)
+
+
+@app.get("/api/games")
+def get_games():
+    return jsonify(list(GAME_POKEDEX_MAP.keys()))
 
 
 @app.post("/api/close-action")
