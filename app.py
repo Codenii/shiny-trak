@@ -562,12 +562,7 @@ def _create_macos_status_item(window):
 
 def _setup_tray(window):
     if platform.system() == "Darwin":
-        try:
-            import objc
-
-            objc.callAfter(_create_macos_status_item, window)
-        except ImportError:
-            pass
+        _create_macos_status_item(window)
     else:
         _setup_tray_pystray(window)
 
