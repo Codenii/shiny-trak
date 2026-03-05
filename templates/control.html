@@ -394,7 +394,7 @@
     <div
         x-show="showCloseDialog"
         x-transition.opacity
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
     >
         <div class="bg-bg-surface border border-white/10 rounded-2xl p-6 w-80 shadow-2xl">
             <div class="text-base font-semibold text-white mb-1">Close Shiny Trak?</div>
@@ -450,6 +450,113 @@
                     </template>
                 </div>
             </div>
+            <!-- Mark Found Behavior -->
+            <div class="mt-5 pt-5 border-t border-white/5">
+                <div class="text-xs font-medium text-accent-muted/70 uppercase tracking-wider mb-3">When marking a hunt as found</div>
+                <div class="space-y-1.5">
+                    <template x-for="opt in [{value:'ask',label:'Ask for notes'},{value:'never',label:'Complete immediately'}]" :key="opt.value">
+                        <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors duration-150">
+                            <input
+                                type="radio"
+                                name="mark_found_behavior"
+                                :value="opt.value"
+                                x-model="settings.mark_found_behavior"
+                                @change="saveSettings()"
+                                class="accent-primary"
+                            />
+                            <span class="text-sm text-white/80" x-text="opt.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Mark as Found Dialog -->
+    <div
+        x-show="showMarkFound"
+        x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        @click.self="showMarkFound = false"
+    >
+        <div class="bg-bg-surface border border-white/10 rounded-2xl p-6 w-96 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <div class="text-base font-semibold text-white">Mark as Found</div>
+                    <div class="text-sm text-white/40 mt-0.5" x-text="markFoundHunt ? markFoundHunt.displayName : ''"></div>
+                </div>
+                <button @click="showMarkFound = false" class="text-white/30 hover:text-white/60 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <!-- Notes -->
+            <div class="mb-5">
+                <label class="block text-xs font-medium text-accent-muted/70 uppercase tracking-wider mb-1.5">Notes <span class="text-white/20 normal-case tracking-normal">(optional)</span></label>
+                <textarea
+                    x-model="markFoundNotes"
+                    placeholder="How did you find it? Any thoughts..."
+                    rows="3"
+                    class="w-full bg-bg-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors duration-150 resize-none"></textarea>
+            </div>
+            <!-- Actions -->
+            <div class="flex gap-2">
+                <button
+                    @click="confirmMarkFound()"
+                    class="flex-1 px-4 py-2.5 bg-accent-muted/20 hover:bg-accent-muted/30 border border-accent-muted/30 rounded-lg text-sm font-medium text-accent-muted transition-colors duration-150"
+                >Mark as Found</button>
+                <button
+                    @click="showMarkFound = false"
+                    class="px-4 py-2.5 hover:bg-white/5 rounded-lg text-sm font-medium text-white/40 hover:text-white/60 transition-colors duration-150"
+                >Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- Export Panel -->
+    <div
+        x-show="showExport"
+        x-transition.opacity
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        @click.self="showExport = false"
+    >
+        <div class="bg-bg-surface border border-white/10 rounded-2xl p-6 w-96 shadow-2xl">
+            <div class="flex items-center justify-between mb-5">
+                <div class="text-base font-semibold text-white">Export Hunts</div>
+                <button @click="showExport = false" class="text-white/30 hover:text-white/60 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <!-- Scope -->
+            <div class="mb-5">
+                <div class="text-xs font-medium text-accent-muted/70 uppercase tracking-wider mb-3">Include</div>
+                <div class="space-y-1.5">
+                    <template x-for="opt in [{value:'all',label:'All hunts'},{value:'active',label:'Active hunts only'},{value:'completed',label:'Completed hunts only'}]" :key="opt.value">
+                        <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors duration-150">
+                            <input type="radio" name="export_scope" :value="opt.value" x-model="exportScope" class="accent-primary" />
+                            <span class="text-sm text-white/80" x-text="opt.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+            <!-- Format -->
+            <div class="mb-5">
+                <div class="text-xs font-medium text-accent-muted/70 uppercase tracking-wider mb-3">Format</div>
+                <div class="space-y-1.5">
+                    <template x-for="opt in [{value:'json',label:'JSON'},{value:'csv',label:'CSV'}]" :key="opt.value">
+                        <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors duration-150">
+                            <input type="radio" name="export_format" :value="opt.value" x-model="exportFormat" class="accent-primary" />
+                            <span class="text-sm text-white/80" x-text="opt.label"></span>
+                        </label>
+                    </template>
+                </div>
+            </div>
+            <!-- Download -->
+            <button
+                @click="exportHunts(exportScope, exportFormat); showExport = false"
+                class="w-full px-4 py-2.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-white transition-colors duration-150"
+            >Download</button>
         </div>
     </div>
     <script>
@@ -472,6 +579,8 @@
                 showCloseDialog: false,
                 showSettings: false,
                 overlayUrlCopied: false,
+                exportScope: 'all',
+                exportFormat: 'json',
                 _captureListener: null,
 
                 // Lifecycle
@@ -567,7 +676,10 @@
                 markFound(hunt) {
                     const behavior = this.settings.mark_found_behavior
                     if (behavior === 'never') {
-                        fetch(`/api/hunts/${hunt.id}/complete`, { method: 'POST' })
+                        fetch(`/api/hunts/${hunt.id}/complete`, {
+                            method: 'POST' ,
+                            headers: { 'Content-Type': 'application/json' }
+                        })
                         return
                     }
                     this.markFoundHunt = hunt

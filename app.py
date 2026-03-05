@@ -376,7 +376,7 @@ def complete_hunt(hunt_id):
     hunt = next((h for h in hunts if h["id"] == hunt_id), None)
     if hunt is None:
         return jsonify({"error": "not found"}), 404
-    data = request.json or {}
+    data = request.get_json(silent=True) or {}
     hunt["status"] = "completed"
     hunt["endDate"] = time.time()
     if "notes" in data:
