@@ -582,6 +582,11 @@ def export_hunts():
     elif scope == "completed":
         hunts = [h for h in hunts if h.get("status") == "completed"]
 
+    filename = f"shiny-trak-{scope}.{fmt}"
+    download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+    os.makedirs(download_dir, exist_ok=True)
+    filepath = os.path.join(download_dir, filename)
+
     if fmt == "csv":
         fields = [
             "displayName",
@@ -593,37 +598,27 @@ def export_hunts():
             "endDate",
             "notes",
         ]
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        for h in hunts:
-            row = dict(h)
-            row["startDate"] = (
-                time.strftime("%Y-%m-%d", time.localtime(h["startDate"]))
-                if h.get("startDate")
-                else ""
-            )
-            row["endDate"] = (
-                time.strftime("%Y-%m-%d", time.localtime(h["endDate"]))
-                if h.get("endDate")
-                else ""
-            )
-            writer.writerow(row)
-        csv_data = output.getvalue()
-        return Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; filename=shiny-trak-{scope}.csv"
-            },
-        )
-    return Response(
-        json.dumps(hunts, indent=2),
-        mimetype="application/json",
-        headers={
-            "Content-Disposition": f"attachment; filename=shiny-trak-{scope}.json"
-        },
-    )
+        with open(filepath, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+            writer.writeheader()
+            for h in hunts:
+                row = dict(h)
+                row["startDate"] = (
+                    time.strftime("%Y-%m-%d", time.localtime(h["startDate"]))
+                    if h.get("startDAte")
+                    else ""
+                )
+                row["endDate"] = (
+                    time.strftime("%Y-%m-%d", time.localtime(h["endDate"]))
+                    if h.get("endDate")
+                    else ""
+                )
+                writer.writerow(row)
+    else:
+        with open(filepath, "w") as f:
+            json.dump(hunts, f, indent=2)
+
+    return jsonify({"ok": True, "filename": filename})
 
 
 @app.post("/api/shutdown")

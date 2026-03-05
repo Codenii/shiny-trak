@@ -394,7 +394,8 @@
     <div
         x-show="showCloseDialog"
         x-transition.opacity
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        style="z-index: 60;"
+        class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     >
         <div class="bg-bg-surface border border-white/10 rounded-2xl p-6 w-80 shadow-2xl">
             <div class="text-base font-semibold text-white mb-1">Close Shiny Trak?</div>
@@ -554,10 +555,22 @@
             </div>
             <!-- Download -->
             <button
-                @click="exportHunts(exportScope, exportFormat); showExport = false"
+                @click="exportHunts(exportScope, exportFormat);"
                 class="w-full px-4 py-2.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-white transition-colors duration-150"
             >Download</button>
         </div>
+    </div>
+    <!-- Toast Notification -->
+    <div
+        x-show="exportMessage"
+        x-transition.opacity
+        style="z-index: 70;"
+        class="fixed bottom-5 right-5 bg-bg-surface border border-white/10 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3"
+    >
+        <svg class="w-4 h-4 text-accent-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="text-sm text-white/80" x-text="exportMessage"></span>
     </div>
     <script>
         function app() {
@@ -581,6 +594,7 @@
                 overlayUrlCopied: false,
                 exportScope: 'all',
                 exportFormat: 'json',
+                exportMessage: '',
                 _captureListener: null,
 
                 // Lifecycle
@@ -825,8 +839,13 @@
                     setTimeout(() => this.overlayUrlCopied = false, 2000)
                 },
 
-                exportHunts(scope, fmt) {
-                    window.location.href = `/api/export?scope=${scope}&format=${fmt}`
+                async exportHunts(scope, fmt) {
+                    const result = await fetch(`/api/export?scope=${scope}&format=${fmt}`).then(r => r.json())
+                    if (result.ok) {
+                        this.exportMessage = `Saved to Downloads/${result.filename}`
+                        setTimeout(() => this.exportMessage = '', 4000)
+                    }
+                    this.showExport = false
                 },
             }
         }
