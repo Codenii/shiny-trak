@@ -221,6 +221,7 @@
                         <!-- Name + Mode -->
                         <div class="flex-shrink-0 w-36">
                             <div class="text-sm font-semibold text-white truncate" x-text="hunt.displayName"></div>
+                            <span x-show="hunt.game" class="text-xs text-white/30 truncate" x-text="hunt.game"></span>
                             <select
                                 :value="hunt.displayMode"
                                 @change="updateMode(hunt.id, $event.target.value)"
