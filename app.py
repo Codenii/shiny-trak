@@ -25,8 +25,10 @@ from store import (
     GAME_POKEDEX_MAP,
     GAMES_CACHE_DIR,
     load_hunts,
+    load_overlays,
     load_settings,
     save_hunts,
+    save_overlays,
     save_settings,
     broadcast,
     sse_clients,
@@ -104,7 +106,7 @@ def add_hunt():
         "displayName": data.get("displayName", "Unknown"),
         "spriteUrl": data.get("spriteUrl") or None,
         "count": 0,
-        "displayMode": data.get("displayMode", "full"),
+        "encounterRate": data.get("encounterRate") or None,
         "hotkey": data.get("hotkey") or None,
         "hotkeyDecrement": data.get("hotkeyDecrement") or None,
         "game": data.get("game") or None,
@@ -132,7 +134,7 @@ def update_hunt(hunt_id):
     data = request.json or {}
     allowed = {
         "displayName",
-        "displayMode",
+        "encounterRate",
         "hotkey",
         "hotkeyDecrement",
         "spriteUrl",
@@ -500,9 +502,35 @@ def close_action():
     return jsonify({"ok": True})
 
 
+def migrate_overlays() -> None:
+    if load_overlays():
+        return
+    hunts = load_hunts()
+    changed = False
+    for h in hunts:
+        if "displayMode" in h:
+            del h["displayMode"]
+            changed = True
+    if changed:
+        save_hunts(hunts)
+    overlay = {
+        "id": str(uuid.uuid4()),
+        "name": "main",
+        "elements": {
+            "sprite": True,
+            "name": True,
+            "count": True,
+            "odds": False,
+        },
+        "hunts": [{"huntId": h["id"], "visible": True} for h in hunts],
+    }
+    save_overlays([overlay])
+
+
 # Start
 if __name__ == "__main__":
     rebuild_hotkeys()
+    migrate_overlays()
 
     threading.Thread(
         target=lambda: app.run(
