@@ -221,7 +221,16 @@
                         <!-- Name + Mode -->
                         <div class="flex-shrink-0 w-36">
                             <div class="text-sm font-semibold text-white truncate" x-text="hunt.displayName"></div>
-                            <span x-show="hunt.game" class="text-xs text-white/30 truncate" x-text="hunt.game"></span>
+                            <select
+                                :value="hunt.game"
+                                @change="updateGame(hunt.id, $event.target.value)"
+                                class="mt-1 bg-bg-surface border border-white/10 rounded px-2 py-0.5 text-xs text-accent-muted/70 focus:outline-none focus:border-primary/50 cursor-pointer"
+                            >
+                                <option value="">No Game</option>
+                                <template x-for="game in games" :key="game">
+                                    <option :value="game" x-text="game"></option>
+                                </template>
+                            </select>
                             <select
                                 :value="hunt.displayMode"
                                 @change="updateMode(hunt.id, $event.target.value)"
@@ -720,6 +729,14 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ displayMode: mode })
                     })
+                },
+
+                async updateGame(id, value) {
+                    fetch(`/api/hunts/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ game: value || null }) })
+                        .then(r => r.json()).then(hunt => {
+                            const i = this.findIndex(h => h.id === id)
+                            if (i !== -1) this.hunts[i] = hunt
+                        })
                 },
 
                 async increment(id) {
