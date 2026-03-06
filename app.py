@@ -605,7 +605,7 @@ def export_hunts():
                 row = dict(h)
                 row["startDate"] = (
                     time.strftime("%Y-%m-%d", time.localtime(h["startDate"]))
-                    if h.get("startDAte")
+                    if h.get("startDate")
                     else ""
                 )
                 row["endDate"] = (
