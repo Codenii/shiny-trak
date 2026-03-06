@@ -224,7 +224,7 @@
                             <select
                                 :value="hunt.game"
                                 @change="updateGame(hunt.id, $event.target.value)"
-                                class="mt-1 bg-bg-surface border border-white/10 rounded px-2 py-0.5 text-xs text-accent-muted/70 focus:outline-none focus:border-primary/50 cursor-pointer"
+                                class="w-full mt-1 bg-bg-surface border border-white/10 rounded px-2 py-0.5 text-xs text-accent-muted/70 focus:outline-none focus:border-primary/50 cursor-pointer"
                             >
                                 <option value="">No Game</option>
                                 <template x-for="game in games" :key="game">
