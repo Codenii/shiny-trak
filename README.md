@@ -16,6 +16,10 @@ increment counters via global hotkeys without leaving your game.
 - Global hotkeys for increment and decrement (no app focus needed)
 - Manual count entry for starting a hunt mid-way through
 - Auto-complete Pokemon name search with shiny sprites from PokeAPI
+- Game field per hunt with game-filtering Pokemon autocomplete
+- Mark hunt as found with optional notes field
+- Hunt history tab showing completed hunts
+- Export hunt data to CSV or JSON
 
 ---
 
@@ -90,6 +94,9 @@ Open `http://localhost:3000` in your browser.
 - **Delete**: Remove the hunt from the tracker completely
 - **Display mode**: Change how the hunt appears on the overlay (Full / Name / Counter)
 - **Hotkeys**: Assign global keyboard shortcuts to increment/decrement each hunt (see below)
+- **Game**: Select which game the hunt is for (filters the Pokemon autocomplete)
+- **Mark as Found**: Complete hunts and move them to the history tab
+- **Export**: Download hunt data in either CSV or JSON format
 
 ### OBS Overlay
 
@@ -163,6 +170,6 @@ Another application is using port 3000. Quit that application, or if running fro
 the OBS browser source URL to match.
 
 ## Roadmap
-Shiny Trak is actively being developed. Planned features include a native desktop UI, hunt history, multiple additional overlays, statistics tracking, and more.  
+Shiny Trak is actively being developed. Planned features include multiple overlay support, statistics tracking, and more.  
 
 See the full [Roadmap](ROADMAP.md) for details.

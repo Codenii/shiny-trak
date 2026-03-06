@@ -141,7 +141,7 @@
             es.onmessage = (e) => {
                 try {
                     const data = JSON.parse(e.data);
-                    if (data.hunts) renderHunts(data.hunts);
+                    if (data.hunts) renderHunts(data.hunts.filter(h => h.status === 'active' || !h.status));
                 } catch (err) {
                     console.error('Parse error:', err);
                 }

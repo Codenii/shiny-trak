@@ -8,6 +8,10 @@ module.exports = {
                 accent: { DEFUALT: '#4361EE', light: '#4895EF', muted: '#4CC9F0' },
                 danger: { DEFAULT: '#F72585', hover: '#B5179E' },
                 gold: '#FBBF24'
+            },
+            zIndex: {
+                '60': '60',
+                '70': '70',
             }
         }
     },

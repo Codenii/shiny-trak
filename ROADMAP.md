@@ -6,7 +6,7 @@ Progress on each version can be tracked via [GitHub Milestones](https://github.c
 
 ---
 
-## Current Release - v1.1.0
+## Current Release - v1.2.0
 Current public release.  
 **Core Features:**  
 - Multiple concurrent shiny tracking
@@ -17,18 +17,15 @@ Current public release.
 - Native desktop window via PyWebView (no longer need to use a separate browser tab)
 - Full UI overhaul using Alpine.js and Tailwind CSS
 - Improved layout, animations, and overall polish
-
----
-
-## Upcoming Releases
-
-### v1.2.0 - Hunt History
-Hunts become more in-depth and completed hunts are preserved rather than deleted.
 - Add a game field to each hunt
 - Active / completed status with the ability to mark a hunt as found/finished
 - Start date and end date for time tracking of each individual hunt
 - Hunt notes, not shown on the overlay. Used as way to provide personal notes/information on a specific hunt
 - Export hunt history to CSV or JSON
+
+---
+
+## Upcoming Releases
 
 ### v1.3.0 - Overlay System
 Full control over what appears in OBS.
@@ -74,3 +71,4 @@ An optional web platform for sharing hunt history and statistics publicly.
 - **v1.0.4** - Further macOS bundle fixes
 - **v1.0.5** - Disabled pynput on macOS to resolve crash on hotkey setup
 - **v1.1.0** - Native desktop window via PyWebView, full UI overhaul
+- **v1.2.0** - Game field, hunt history, mark as found, CSV/JSON export

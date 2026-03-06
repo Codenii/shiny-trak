@@ -1,5 +1,7 @@
-import json
 import os
+import csv
+import io
+import json
 import threading
 import time
 import urllib.request
@@ -58,6 +60,35 @@ DATA_DIR = os.path.join(_BASE_DIR, "data")
 DATA_FILE = os.path.join(DATA_DIR, "hunts.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 
+GAMES_CACHE_DIR = os.path.join(DATA_DIR, "game_cache")
+
+GAME_POKEDEX_MAP: dict[str, list[str]] = {
+    "Red / Blue": ["kanto"],
+    "Yellow": ["kanto"],
+    "Gold / Silver": ["original-johto"],
+    "Crystal": ["original-johto"],
+    "Ruby / Sapphire": ["hoenn"],
+    "FireRed / LeafGreen": ["kanto"],
+    "Emerald": ["hoenn"],
+    "Diamond / Pearl": ["original-sinnoh"],
+    "Platinum": ["extended-sinnoh"],
+    "HeartGold / SoulSilver": ["updated-johto"],
+    "Black / White": ["original-unova"],
+    "Black 2 / White 2": ["updated-unova"],
+    "X / Y": ["kalos-central", "kalos-coastal", "kalos-mountain"],
+    "Omega Ruby / Alpha Sapphire": ["updated-hoenn"],
+    "Sun / Moon": ["original-alola"],
+    "Ultra Sun / Ultra Moon": ["updated-alola"],
+    "Let's Go Pikachu / Eevee": ["letsgo-kanto"],
+    "Sword / Shield": ["galar", "isle-of-armor", "crown-tundra"],
+    "Brilliant Diamond / Shining Pearl": ["updated-sinnoh"],
+    "Legends: Arceus": ["hisui"],
+    "Scarlet / Violet": ["paldea", "kitakami", "blueberry"],
+    "Legends: Z-A": ["kalos-central", "kalos-coastal", "kalos-mountain"],
+}
+
+_game_pokemon_cache: dict[str, list[str]] = {}
+
 _webview_window = None
 _macos_tray_refs = {}
 
@@ -97,14 +128,19 @@ def save_hunts(hunts: list) -> None:
 
 
 def load_settings() -> dict:
+    defaults = {
+        "close_behavior": "ask",
+        "mark_found_behavior": "ask",
+    }
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(SETTINGS_FILE):
-        return {"close_behavior": "ask"}
+        return defaults
     try:
         with open(SETTINGS_FILE) as f:
-            return json.load(f)
+            saved = json.load(f)
+        return {**defaults, **saved}
     except (json.JSONDecodeError, OSError):
-        return {"close_behavior": "ask"}
+        return defaults
 
 
 def save_settings(settings: dict) -> None:
@@ -160,8 +196,9 @@ def rebuild_hotkeys() -> None:
             hotkey_listener = None
 
         hunts = load_hunts()
+        active_hunts = [h for h in hunts if h.get("status", "active") == "active"]
         hotkey_map = {}
-        for h in hunts:
+        for h in active_hunts:
             if h.get("hotkey"):
                 hotkey_map[h["hotkey"]] = lambda hid=h["id"]: increment_hunt_by_id(hid)
             if h.get("hotkeyDecrement"):
@@ -240,6 +277,11 @@ def add_hunt():
         "displayMode": data.get("displayMode", "full"),
         "hotkey": data.get("hotkey") or None,
         "hotkeyDecrement": data.get("hotkeyDecrement") or None,
+        "game": data.get("game") or None,
+        "notes": "",
+        "status": "active",
+        "startDate": time.time(),
+        "endDate": None,
         "createdAt": time.time(),
     }
     hunts = load_hunts()
@@ -265,6 +307,8 @@ def update_hunt(hunt_id):
         "hotkeyDecrement",
         "spriteUrl",
         "count",
+        "game",
+        "notes",
     }
     for k in allowed:
         if k in data:
@@ -323,6 +367,23 @@ def reset(hunt_id):
     hunt["count"] = 0
     save_hunts(hunts)
     broadcast(hunts)
+    return jsonify(hunt)
+
+
+@app.post("/api/hunts/<hunt_id>/complete")
+def complete_hunt(hunt_id):
+    hunts = load_hunts()
+    hunt = next((h for h in hunts if h["id"] == hunt_id), None)
+    if hunt is None:
+        return jsonify({"error": "not found"}), 404
+    data = request.get_json(silent=True) or {}
+    hunt["status"] = "completed"
+    hunt["endDate"] = time.time()
+    if "notes" in data:
+        hunt["notes"] = data["notes"]
+    save_hunts(hunts)
+    broadcast(hunts)
+    rebuild_hotkeys()
     return jsonify(hunt)
 
 
@@ -439,6 +500,127 @@ def pokemon_list():
         return jsonify([])
 
 
+@app.get("/api/pokemon-list/game/<path:game>")
+def pokemon_list_by_game(game):
+    if game not in GAME_POKEDEX_MAP:
+        return jsonify({"error": "Unknown game"}), 404
+
+    # In memory cache hit
+    if game in _game_pokemon_cache:
+        return jsonify(_game_pokemon_cache[game])
+
+    # Disk cache hit (30 day expiry)
+    os.makedirs(GAMES_CACHE_DIR, exist_ok=True)
+    cache_file = os.path.join(
+        GAMES_CACHE_DIR, f"{game.replace('/', '_').replace(' ', '_')}.json"
+    )
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file) as f:
+                cached = json.load(f)
+            if time.time() - cached.get("ts", 0) < 86400 * 30:
+                _game_pokemon_cache[game] = cached["names"]
+                return jsonify(cached["names"])
+        except (json.JSONDecodeError, OSError, KeyError):
+            pass
+
+    # Fetch from PokeAPI
+    names = set()
+    for pokedex_id in GAME_POKEDEX_MAP[game]:
+        try:
+            url = f"https://pokeapi.co/api/v2/pokedex/{pokedex_id}/"
+            req = urllib.request.Request(url, headers={"User-Agent": "shiny-trak/1.0"})
+            with _http_opener.open(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+            for entry in data["pokemon_entries"]:
+                names.add(entry["pokemon_species"]["name"])
+        except Exception:
+            pass
+
+    if not names:
+        return jsonify({"error": "Failed to fetch game data"}), 502
+
+    result = sorted(names)
+
+    # Write disk cache
+    try:
+        with open(cache_file, "w") as f:
+            json.dump({"ts": time.time(), "names": result}, f)
+    except OSError:
+        pass
+
+    _game_pokemon_cache[game] = result
+    return jsonify(result)
+
+
+@app.post("/api/pokemon-list/game/<path:game>/refresh")
+def refresh_game_cache(game):
+    if game not in GAME_POKEDEX_MAP:
+        return jsonify({"error": "Unknown game"}), 404
+
+    # Clear caches and re-fetch data
+    _game_pokemon_cache.pop(game, None)
+    cache_file = os.path.join(
+        GAMES_CACHE_DIR, f"{game.replace('/', '_').replace(' ', '_')}.json"
+    )
+    try:
+        os.remove(cache_file)
+    except OSError:
+        pass
+
+    return pokemon_list_by_game(game)
+
+
+@app.get("/api/export")
+def export_hunts():
+    scope = request.args.get("scope", "all")
+    fmt = request.args.get("format", "json")
+
+    hunts = load_hunts()
+    if scope == "active":
+        hunts = [h for h in hunts if h.get("status", "active") == "active"]
+    elif scope == "completed":
+        hunts = [h for h in hunts if h.get("status") == "completed"]
+
+    filename = f"shiny-trak-{scope}.{fmt}"
+    download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
+    os.makedirs(download_dir, exist_ok=True)
+    filepath = os.path.join(download_dir, filename)
+
+    if fmt == "csv":
+        fields = [
+            "displayName",
+            "pokemon",
+            "game",
+            "count",
+            "status",
+            "startDate",
+            "endDate",
+            "notes",
+        ]
+        with open(filepath, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
+            writer.writeheader()
+            for h in hunts:
+                row = dict(h)
+                row["startDate"] = (
+                    time.strftime("%Y-%m-%d", time.localtime(h["startDate"]))
+                    if h.get("startDate")
+                    else ""
+                )
+                row["endDate"] = (
+                    time.strftime("%Y-%m-%d", time.localtime(h["endDate"]))
+                    if h.get("endDate")
+                    else ""
+                )
+                writer.writerow(row)
+    else:
+        with open(filepath, "w") as f:
+            json.dump(hunts, f, indent=2)
+
+    return jsonify({"ok": True, "filename": filename})
+
+
 @app.post("/api/shutdown")
 def shutdown():
     def _stop():
@@ -458,11 +640,16 @@ def get_settings():
 def update_settings():
     data = request.json or {}
     settings = load_settings()
-    for k in {"close_behavior"}:
+    for k in {"close_behavior", "mark_found_behavior"}:
         if k in data:
             settings[k] = data[k]
     save_settings(settings)
     return jsonify(settings)
+
+
+@app.get("/api/games")
+def get_games():
+    return jsonify(list(GAME_POKEDEX_MAP.keys()))
 
 
 @app.post("/api/close-action")
@@ -565,13 +752,14 @@ def _create_macos_status_item(window):
 def _setup_tray(window):
     if platform.system() == "Darwin":
         import ctypes
-        _lib = ctypes.CDLL('/usr/lib/system/libdispatch.dylib')
+
+        _lib = ctypes.CDLL("/usr/lib/system/libdispatch.dylib")
         _CB = ctypes.CFUNCTYPE(None, ctypes.c_void_p)
         _cb = _CB(lambda _: _create_macos_status_item(window))
-        _macos_tray_refs['_dispatch_cb'] = _cb
+        _macos_tray_refs["_dispatch_cb"] = _cb
         _lib.dispatch_async_f.argtypes = [ctypes.c_void_p, ctypes.c_void_p, _CB]
         _lib.dispatch_async_f.restype = None
-        _main_q = ctypes.addressof(ctypes.c_char.in_dll(_lib, '_dispatch_main_q'))
+        _main_q = ctypes.addressof(ctypes.c_char.in_dll(_lib, "_dispatch_main_q"))
         _lib.dispatch_async_f(_main_q, None, _cb)
     else:
         _setup_tray_pystray(window)
