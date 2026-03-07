@@ -15,6 +15,7 @@ from flask import (
     jsonify,
     render_template,
     request,
+    redirect,
     stream_with_context,
 )
 
@@ -55,9 +56,18 @@ def control_panel():
     return render_template("control.html")
 
 
-@app.route("/overlay")
-def overlay():
-    return render_template("overlay.html")
+@app.route('/overlay')
+def overlay_default():
+    return redirect('/overlay/main')
+
+
+@app.route('/overlay/<name>')
+def overlay(name):
+    overlays = load_overlays()
+    ov = next((o for o in overlays if o['name'].lower() == name.lower()), None)
+    if ov is None:
+        return 'Overlay not found', 404
+    return render_template('overlay.html', overlay_id=ov['id'])
 
 
 # Routes - SSE
@@ -69,7 +79,7 @@ def events():
             sse_clients.append(q)
         try:
             # Send current state on connect
-            initial = json.dumps({"hunts": load_hunts()})
+            initial = json.dumps({"hunts": load_hunts(), 'overlays': load_overlays()})
             yield f"data: {initial}\n\n"
             while True:
                 try:
