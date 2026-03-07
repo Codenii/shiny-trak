@@ -110,6 +110,11 @@ def get_hunts():
 @app.post("/api/hunts")
 def add_hunt():
     data = request.json or {}
+    overlays = load_overlays()
+    for o in overlays:
+        if not any(h['huntId'] == hunt['id'] for h in o['hunts']):
+            o['hunts'].append({'huntId': hunt['id'], 'visible': True})
+
     hunt = {
         "id": str(uuid.uuid4()),
         "pokemon": data.get("pokemon", ""),
@@ -129,7 +134,8 @@ def add_hunt():
     hunts = load_hunts()
     hunts.append(hunt)
     save_hunts(hunts)
-    broadcast(hunts)
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
     rebuild_hotkeys()
     return jsonify(hunt), 201
 
@@ -161,17 +167,22 @@ def update_hunt(hunt_id):
             else:
                 hunt[k] = data[k]
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     rebuild_hotkeys()
     return jsonify(hunt)
 
 
 @app.delete("/api/hunts/<hunt_id>")
 def delete_hunt(hunt_id):
+    overlays = load_overlays()
+    for o in overlays:
+        o['hunts'] = [h for h in o['hunts'] if h['huntId'] != hunt_id]
+
     hunts = load_hunts()
     hunts = [h for h in hunts if h["id"] != hunt_id]
     save_hunts(hunts)
-    broadcast(hunts)
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
     rebuild_hotkeys()
     return jsonify({"ok": True})
 
@@ -184,7 +195,7 @@ def increment(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] += 1
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -196,7 +207,7 @@ def decrement(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] = max(0, hunt["count"] - 1)
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -208,7 +219,7 @@ def reset(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] = 0
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -224,7 +235,7 @@ def complete_hunt(hunt_id):
     if "notes" in data:
         hunt["notes"] = data["notes"]
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     rebuild_hotkeys()
     return jsonify(hunt)
 
@@ -535,6 +546,60 @@ def migrate_overlays() -> None:
         "hunts": [{"huntId": h["id"], "visible": True} for h in hunts],
     }
     save_overlays([overlay])
+
+
+@app.get('/api/overlays')
+def get_overlays():
+    return jsonify(load_overlays())
+
+
+@app.post('/api/overlays')
+def add_overlay():
+    data = request.json or {}
+    name = data.get('name', '').strip()
+    if not name:
+        return jsonify({'error': 'name required'}), 400
+    hunts = load_hunts()
+    overlay = {
+        'id': str(uuid.uuid4()),
+        'name': name,
+        'elements': {'sprite': True, 'name': True, 'count': True, 'odds': False},
+        'hunts': [{'huntId': h['id'], 'visible': True} for h in hunts if h.get('status', 'active') == 'active'],
+    }
+    overlays = load_overlays()
+    overlays.append(overlay)
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
+    return jsonify(overlay), 201
+
+
+@app.put('/api/overlays/<overlay_id>')
+def update_overlay(overlay_id):
+    overlays = load_overlays()
+    overlay = next((o for o in overlays if o['id'] == overlay_id), None)
+    if overlay is None:
+        return jsonify({'error': 'not found'}), 404
+    data = request.json or {}
+    if 'name' in data:
+        overlay['name'] = data['name'].strip()
+    if 'hunts' in data:
+        overlay['hunts'] = data['hunts']
+    if 'elements' in data:
+        overlay['elements'] = data['elements']
+    save_overlays(overlays)
+    broadcast(load_hunts(), overlays)
+    return jsonify(overlay)
+
+
+@app.delete('/api/overlays/<overlay_id>')
+def delete_overlay(overlay_id):
+    overlays = load_overlays()
+    if len(overlays) <= 1:
+        return jsonify({'error': 'cannot delete the last overlay'}), 400
+    overlays = [o for o in overlays if o['id'] != overlay_id]
+    save_overlays(overlays)
+    broadcast(load_hunts(), overlays)
+    return jsonify({'ok': True})
 
 
 # Start

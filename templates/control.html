@@ -61,21 +61,20 @@
                     </svg>
                     <span class="text-sm font-medium" :class="activeTab === 'history' ? 'text-white' : 'text-white/40'">History</span>
                 </div>
+                <div
+                    @click="activeTab = 'overlays'"
+                    :class="activeTab === 'overlays' ? 'bg-primary/20 border-l-2 border-primary' : 'border-l-2 border-transparent hover:bg-white/5'"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150"
+                >
+                    <svg class="w-4 h-4 flex-shrink-0" :class="activeTab === 'overlays' ? 'text-primary-light' : 'text-white/40'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm font-medium" :class="activeTab === 'overlays' ? 'text-white' : 'text-white/40'">Overlays</span>
+                </div>
             </nav>
 
             <!-- Bottom Actions -->
             <div class="px-3 py-3 border-t border-white/5 space-y-0.5">
-                <!-- Copy overlay URL -->
-                <button
-                    @click="copyOverlayUrl()"
-                    class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-accent-muted/70 hover:text-accent-muted hover:bg-white/5 transition-colors duration-150"
-                >
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    <span class="text-sm font-medium" x-text="overlayUrlCopied ? 'Copied!' : 'Copy Overlay URL'"></span>
-                </button>
-
                 <!-- Export -->
                 <button
                     @click="showExport = true"
@@ -114,7 +113,7 @@
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-hidden">
             <!-- Add Hunt Form -->
-            <div class="px-6 py-4 border-b border-white/5 bg-bg-surface/50">
+            <div x-show="activeTab === 'hunts'" class="px-6 py-4 border-b border-white/5 bg-bg-surface/50">
                 <div class="flex items-end gap-3">
                     <!-- Pokemon Search -->
                     <div class="flex-1 max-w-xs">
@@ -398,6 +397,84 @@
                     </div>
                 </template>
             </div>
+            <!-- Overlays Tab -->
+            <div x-show="activeTab === 'overlays'" class="flex-1 flex flex-col overflow-hidden">
+                <!-- New Overlay Header -->
+                <div class="px-6 py-3 border-b border-white/5 flex items-center gap-2">
+                    <div x-show="!showNewOverlay">
+                        <button @click="showNewOverlay = true" class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-white transition-colors duration-150">
+                            + New Overlay
+                        </button>
+                    </div>
+                    <div x-show="showNewOverlay" class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            x-model="newOverlayName"
+                            @keydown.enter="addOverlay()"
+                            @keydown.escape="showNewOverlay = false; newOverlayName = ''"
+                            placeholder="Overlay name..."
+                            class="bg-bg-card border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary/60 transition-colors duration-150"
+                        />
+                        <button @click="addOverlay()" class="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-white transition-colors duration-150">Add</button>
+                        <button @click="showNewOverlay = false; newOverlayName = ''" class="text-white/30 hover:text-white/60 text-sm transition-colors">Cancel</button>
+                    </div>
+                </div>
+                <!-- Overlay Cards -->
+                 <div class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+                    <template x-for="overlay in overlays" :key="overlay.id">
+                        <div class="bg-bg-card border border-white/8 rounded-xl overflow-hidden">
+                            <!-- Overlay Header -->
+                            <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/3 transition-colors duration-150"
+                                @click="selectedOverlayId = selectedOverlayId === overlay.id ? null : overlay.id">
+                                <span class="flex-1 text-sm font-semibold text-white" x-text="overlay.name"></span>
+                                <button @click.stop="copyOverlayUrl(overlay)" class="text-xs text-accent-muted/60 hover:text-accent-muted transition-colors px-2 py-1 rounded hover:bg-white/5">Copy URL</button>
+                                <button @click.stop="deleteOverlay(overlay.id)" :disabled="overlays.length <= 1" class="text-white/25 hover:text-danger hover:bg-danger/10 disabled:opacity-30 disabled:cursor-not-allowed rounded p-1 transition-colors duration-150">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                                <svg class="w-4 h-4 text-white/30 transition-transform duration-150" :class="selectedOverlayId === overlay.id ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                            <!-- Hunt Visibility List -->
+                            <div x-show="selectedOverlayId === overlay.id" class="border-t border-white/5 px-4 py-2 space-y-1">
+                                <template x-if="hunts.filter(h => h.status === 'active' || !h.status).length === 0">
+                                    <div class="text-xs text-white/30 py-2">No active hunts</div>
+                                </template>
+                                <template x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)" :key="hunt.id">
+                                    <label class="flex items-center gap-3 py-1.5 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            :checked="overlay.hunts.find(h => h.huntId === hunt.id)?.visible ?? true"
+                                            @change="toggleHuntVisibility(overlay.id, hunt.id)"
+                                            class="accent-primary"
+                                        />
+                                        <img x-show="hunt.spriteUrl" :src="hunt.spriteUrl" class="w-6 h-6 object-contain" style="image-rendering: pixelated;" />
+                                        <span class="text-sm text-white/70 group-hover:text-white transition-colors" x-text="hunt.displayName"></span>
+                                    </label>
+                                </template>
+                                <!-- Element Toggles -->
+                                <div class="border-t border-white/5 px-4 py-2 flex items-center gap-4">
+                                    <span class="text-xs text-white/30 uppercase tracking-wider">Show</span>
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" :checked="overlay.elements.sprite" @change="updateOverlayElement(overlay.id, 'sprite', $event.target.checked)" class="accent-primary" />
+                                        <span class="text-xs text-white/50">Sprite</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" :checked="overlay.elements.name" @change="updateOverlayElement(overlay.id, 'name', $event.target.checked)" class="accent-primary" />
+                                        <span class="text-xs text-white/50">Name</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" :checked="overlay.elements.count" @change="updateOverlayElement(overlay.id, 'count', $event.target.checked)" class="accent-primary" />
+                                        <span class="text-xs text-white/50">Count</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </main>
     </div>
     <!-- Close dialog modal -->
@@ -591,6 +668,10 @@
                 acOptions: [],
                 games: [],
                 gamePokemonNames: [],
+                overlays: [],
+                selectedOverlayId: null,
+                newOverlayName: '',
+                showNewOverlay: false,
                 showMarkFound: false,
                 markFoundHunt: null,
                 markFoundNotes: '',
@@ -628,6 +709,7 @@
                     es.onmessage = (e) => {
                         const data = JSON.parse(e.data)
                         if (data.hunts) this.hunts = data.hunts
+                        if (data.overlays) this.overlays = data.overlays
                     }
                     es.onerror = () => {
                         es.close()
@@ -851,12 +933,6 @@
 
                 quit() { this.confirmClose('quit') },
 
-                async copyOverlayUrl() {
-                    await navigator.clipboard.writeText('http://localhost:3000/overlay')
-                    this.overlayUrlCopied = true
-                    setTimeout(() => this.overlayUrlCopied = false, 2000)
-                },
-
                 async exportHunts(scope, fmt) {
                     const result = await fetch(`/api/export?scope=${scope}&format=${fmt}`).then(r => r.json())
                     if (result.ok) {
@@ -865,6 +941,49 @@
                     }
                     this.showExport = false
                 },
+
+                async addOverlay() {
+                    if (!this.newOverlayName.trim()) return
+                    await fetch('/api/overlays', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: this.newOverlayName.trim() })
+                    })
+                    this.newOverlayName = ''
+                    this.showNewOverlay = false
+                },
+
+                async deleteOverlay(id) {
+                    await fetch(`/api/overlays/${id}`, { method: 'DELETE' })
+                },
+
+                async toggleHuntVisibility(overlayId, huntId) {
+                    const overlay = this.overlays.find(o => o.id === overlayId)
+                    if (!overlay) return
+                    const updatedHunts = overlay.hunts.map(h =>
+                        h.huntId === huntId ? { ...h, visible: !h.visible } : h
+                    )
+                    await fetch(`/api/overlays/${overlayId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hunts: updatedHunts })
+                    })
+                },
+
+                async updateOverlayElement(overlayId, element, value) {
+                    const overlay = this.overlays.find(o => o.id === overlayId)
+                    if (!overlay) return
+                    const updatedElements = { ...overlay.elements, [element]: value }
+                    await fetch(`/api/overlays/${overlayId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ elements: updatedElements })
+                    })
+                },
+
+                async copyOverlayUrl(overlay) {
+                    await navigator.clipboard.writeText(`http://localhost:3000/overlay/${overlay.name}`)
+                }
             }
         }
     </script>
