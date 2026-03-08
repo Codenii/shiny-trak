@@ -524,16 +524,23 @@ def close_action():
 
 
 def migrate_overlays() -> None:
-    if load_overlays():
-        return
+    overlays = load_overlays()
     hunts = load_hunts()
     changed = False
+    for o in overlays:
+        elements = o.setdefault('elements', {})
+        if 'odds' not in elements:
+            elements['odds'] = False
+            changed = True
     for h in hunts:
         if "displayMode" in h:
             del h["displayMode"]
             changed = True
     if changed:
         save_hunts(hunts)
+        save_overlays(overlays)
+    if overlays:
+        return
     overlay = {
         "id": str(uuid.uuid4()),
         "name": "main",

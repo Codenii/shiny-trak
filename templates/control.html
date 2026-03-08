@@ -163,18 +163,6 @@
                             </template>
                         </select>
                     </div>
-                    <!-- Display Mode -->
-                    <div>
-                        <label class="block text-xs font-medium text-accent-muted/70 mb-1.5 uppercase tracking-wider">Display</label>
-                        <select
-                            x-model="newHunt.mode"
-                            class="bg-bg-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/60 transition-colors duration-150 cursor-pointer"
-                        >
-                            <option value="full">Full</option>
-                            <option value="name">Name</option>
-                            <option value="counter">Counter</option>
-                        </select>
-                    </div>
                     <!-- Add Button -->
                     <button
                         @click="addHunt()"
@@ -230,18 +218,16 @@
                                     <option :value="game" :selected="hunt.game === game" x-text="game"></option>
                                 </template>
                             </select>
-                            <select
-                                :value="hunt.displayMode"
-                                @change="updateMode(hunt.id, $event.target.value)"
-                                class="mt-1 bg-bg-surface border border-white/10 rounded px-2 py-0.5 text-xs text-accent-muted/70 focus:outline-none focus:border-primary/50 cursor-pointer"
-                            >
-                                <option value="full">Full</option>
-                                <option value="name">Name</option>
-                                <option value="counter">Counter</option>
-                            </select>
+                            <input
+                                type="number"
+                                :value="hunt.encounterRate"
+                                @change="updateEncounterRate(hunt.id, $event.target.value)"
+                                placeholder="Odds"
+                                class="w-full mt-1 bg-bg-surface border border-white/10 rounded px-2 py-0.5 text-xs text-white/70 focus:outline-none focus:border-primary/50"
+                            />
                         </div>
                         <!-- Hotkeys -->
-                        <div class="flex-1 flex gap-3">
+                        <div class="flex-1 min-w-0 flex gap-3">
                             <!-- Increment Hotkey -->
                             <div class="flex items-center gap-1.5">
                                 <span class="text-xs text-white/30 font-medium">+</span>
@@ -469,6 +455,10 @@
                                         <input type="checkbox" :checked="overlay.elements.count" @change="updateOverlayElement(overlay.id, 'count', $event.target.checked)" class="accent-primary" />
                                         <span class="text-xs text-white/50">Count</span>
                                     </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="checkbox" :checked="overlay.elements.odds" @change="updateOverlayElement(overlay.id, 'odds', $event.target.checked)" class="accent-primary" />
+                                        <span class="text-xs text-white/50">Odds</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -677,7 +667,7 @@
                 markFoundNotes: '',
                 showExport: false,
                 acHighlight: -1,
-                newHunt: { name: '', game: '', mode: 'full', error: '', loading: false },
+                newHunt: { name: '', game: '', error: '', loading: false },
                 capture: { huntId: null, field: null },
                 settings: { close_behavior: 'ask', mark_found_behavior: 'ask' },
                 showCloseDialog: false,
@@ -758,7 +748,6 @@
                                 pokemon: pokemon.pokemon,
                                 displayName: pokemon.displayName,
                                 spriteUrl: pokemon.spriteUrl,
-                                displayMode: this.newHunt.mode,
                                 game: this.newHunt.game || null,
                             })
                         })
@@ -803,14 +792,6 @@
                     this.showMarkFound = false
                     this.markFoundHunt = null
                     this.markFoundNotes = ''
-                },
-
-                async updateMode(id, mode) {
-                    await fetch(`/api/hunts/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ displayMode: mode })
-                    })
                 },
 
                 async updateGame(id, value) {
@@ -983,6 +964,14 @@
 
                 async copyOverlayUrl(overlay) {
                     await navigator.clipboard.writeText(`http://localhost:3000/overlay/${overlay.name}`)
+                },
+
+                async updateEncounterRate(id, value) {
+                    await fetch(`/api/hunts/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ encounterRate: value ? parseInt(value) : null })
+                    })
                 }
             }
         }

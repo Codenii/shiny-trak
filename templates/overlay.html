@@ -61,6 +61,13 @@
             display: inline-block;
         }
 
+        .hunt-odds {
+            color: #A78BFA;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
         @keyframes count-flash {
             0%      { color: #fbbf24; transform: scale(1); }
             40%     { color: #ffffff; transform: scale(1.15); }
@@ -143,6 +150,19 @@
                     }
 
                     card.appendChild(countEl);
+                }
+
+                // Odds
+                if (overlay.elements.odds === true && hunt.encounterRate) {
+                    const sep2 = document.createElement('span');
+                    sep2.className = 'separator';
+                    sep2.textContent = '·';
+                    card.appendChild(sep2);
+
+                    const oddsEl = document.createElement('span');
+                    oddsEl.className = 'hunt-odds';
+                    oddsEl.textContent = `1/${hunt.encounterRate.toLocaleString('en-US')}`;
+                    card.appendChild(oddsEl);
                 }
                 container.appendChild(card);
             });
