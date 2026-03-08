@@ -9,6 +9,8 @@ import urllib.request
 import uuid
 from queue import Empty, Queue
 
+from waitress import serve
+
 from flask import (
     Flask,
     Response,
@@ -617,9 +619,7 @@ if __name__ == "__main__":
     migrate_overlays()
 
     threading.Thread(
-        target=lambda: app.run(
-            host="127.0.0.1", port=3000, threaded=True, use_reloader=False
-        ),
+        target=lambda: serve(app, host='127.0.0.1', port=3000, threads=8),
         daemon=True,
     ).start()
     _wait_for_server()
@@ -644,4 +644,4 @@ if __name__ == "__main__":
         print("OBS overlay URL          http://127.0.0.1:3000/overlay")
         if not PYNPUT_AVAILABLE:
             print("WARNING: pynput not installed - hotkeys unavailable")
-        app.run(host="127.0.0.1", port=3000, threaded=True, use_reloader=False)
+        serve(app, host='127.0.0.1', port=3000, threads=8)
