@@ -5,3 +5,4 @@ pillow
 certifi
 pywebview==6.1
 waitress
+pytest
