@@ -110,10 +110,6 @@ def get_hunts():
 @app.post("/api/hunts")
 def add_hunt():
     data = request.json or {}
-    overlays = load_overlays()
-    for o in overlays:
-        if not any(h['huntId'] == hunt['id'] for h in o['hunts']):
-            o['hunts'].append({'huntId': hunt['id'], 'visible': True})
 
     hunt = {
         "id": str(uuid.uuid4()),
@@ -134,6 +130,12 @@ def add_hunt():
     hunts = load_hunts()
     hunts.append(hunt)
     save_hunts(hunts)
+
+    overlays = load_overlays()
+    for o in overlays:
+        if not any(h['huntId'] == hunt['id'] for h in o['hunts']):
+            o['hunts'].append({'huntId': hunt['id'], 'visible': True})
+            
     save_overlays(overlays)
     broadcast(hunts, overlays)
     rebuild_hotkeys()
