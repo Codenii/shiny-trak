@@ -637,6 +637,7 @@ if __name__ == "__main__":
             background_color="#0D0B1A",
         )
         tray._webview_window.events.closing += _on_closing
+        os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--no-proxy-server'
         webview.start(func=_setup_tray, args=(tray._webview_window,))
         os._exit(0)
     else:
