@@ -618,7 +618,7 @@ if __name__ == "__main__":
 
     threading.Thread(
         target=lambda: app.run(
-            host="0.0.0.0", port=3000, threaded=True, use_reloader=False
+            host="127.0.0.1", port=3000, threaded=True, use_reloader=False
         ),
         daemon=True,
     ).start()
@@ -629,7 +629,7 @@ if __name__ == "__main__":
 
         tray._webview_window = webview.create_window(
             "Shiny Trak",
-            "http://localhost:3000",
+            "http://127.0.0.1:3000",
             width=1100,
             height=700,
             min_size=(820, 560),
@@ -640,8 +640,8 @@ if __name__ == "__main__":
         webview.start(func=_setup_tray, args=(tray._webview_window,))
         os._exit(0)
     else:
-        print("Shiny Trak running at    http://localhost:3000")
-        print("OBS overlay URL          http://localhost:3000/overlay")
+        print("Shiny Trak running at    http://127.0.0.1:3000")
+        print("OBS overlay URL          http://127.0.0.1:3000/overlay")
         if not PYNPUT_AVAILABLE:
             print("WARNING: pynput not installed - hotkeys unavailable")
-        app.run(host="0.0.0.0", port=3000, threaded=True, use_reloader=False)
+        app.run(host="127.0.0.1", port=3000, threaded=True, use_reloader=False)
