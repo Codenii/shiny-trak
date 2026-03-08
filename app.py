@@ -9,12 +9,15 @@ import urllib.request
 import uuid
 from queue import Empty, Queue
 
+from waitress import serve
+
 from flask import (
     Flask,
     Response,
     jsonify,
     render_template,
     request,
+    redirect,
     stream_with_context,
 )
 
@@ -25,8 +28,10 @@ from store import (
     GAME_POKEDEX_MAP,
     GAMES_CACHE_DIR,
     load_hunts,
+    load_overlays,
     load_settings,
     save_hunts,
+    save_overlays,
     save_settings,
     broadcast,
     sse_clients,
@@ -53,9 +58,18 @@ def control_panel():
     return render_template("control.html")
 
 
-@app.route("/overlay")
-def overlay():
-    return render_template("overlay.html")
+@app.route('/overlay')
+def overlay_default():
+    return redirect('/overlay/main')
+
+
+@app.route('/overlay/<name>')
+def overlay(name):
+    overlays = load_overlays()
+    ov = next((o for o in overlays if o['name'].lower() == name.lower()), None)
+    if ov is None:
+        return 'Overlay not found', 404
+    return render_template('overlay.html', overlay_id=ov['id'])
 
 
 # Routes - SSE
@@ -67,7 +81,7 @@ def events():
             sse_clients.append(q)
         try:
             # Send current state on connect
-            initial = json.dumps({"hunts": load_hunts()})
+            initial = json.dumps({"hunts": load_hunts(), 'overlays': load_overlays()})
             yield f"data: {initial}\n\n"
             while True:
                 try:
@@ -98,13 +112,14 @@ def get_hunts():
 @app.post("/api/hunts")
 def add_hunt():
     data = request.json or {}
+
     hunt = {
         "id": str(uuid.uuid4()),
         "pokemon": data.get("pokemon", ""),
         "displayName": data.get("displayName", "Unknown"),
         "spriteUrl": data.get("spriteUrl") or None,
         "count": 0,
-        "displayMode": data.get("displayMode", "full"),
+        "encounterRate": data.get("encounterRate") or None,
         "hotkey": data.get("hotkey") or None,
         "hotkeyDecrement": data.get("hotkeyDecrement") or None,
         "game": data.get("game") or None,
@@ -117,7 +132,14 @@ def add_hunt():
     hunts = load_hunts()
     hunts.append(hunt)
     save_hunts(hunts)
-    broadcast(hunts)
+
+    overlays = load_overlays()
+    for o in overlays:
+        if not any(h['huntId'] == hunt['id'] for h in o['hunts']):
+            o['hunts'].append({'huntId': hunt['id'], 'visible': True})
+            
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
     rebuild_hotkeys()
     return jsonify(hunt), 201
 
@@ -132,7 +154,7 @@ def update_hunt(hunt_id):
     data = request.json or {}
     allowed = {
         "displayName",
-        "displayMode",
+        "encounterRate",
         "hotkey",
         "hotkeyDecrement",
         "spriteUrl",
@@ -149,17 +171,22 @@ def update_hunt(hunt_id):
             else:
                 hunt[k] = data[k]
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     rebuild_hotkeys()
     return jsonify(hunt)
 
 
 @app.delete("/api/hunts/<hunt_id>")
 def delete_hunt(hunt_id):
+    overlays = load_overlays()
+    for o in overlays:
+        o['hunts'] = [h for h in o['hunts'] if h['huntId'] != hunt_id]
+
     hunts = load_hunts()
     hunts = [h for h in hunts if h["id"] != hunt_id]
     save_hunts(hunts)
-    broadcast(hunts)
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
     rebuild_hotkeys()
     return jsonify({"ok": True})
 
@@ -172,7 +199,7 @@ def increment(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] += 1
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -184,7 +211,7 @@ def decrement(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] = max(0, hunt["count"] - 1)
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -196,7 +223,7 @@ def reset(hunt_id):
         return jsonify({"error": "not found"}), 404
     hunt["count"] = 0
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     return jsonify(hunt)
 
 
@@ -212,7 +239,7 @@ def complete_hunt(hunt_id):
     if "notes" in data:
         hunt["notes"] = data["notes"]
     save_hunts(hunts)
-    broadcast(hunts)
+    broadcast(hunts, load_overlays())
     rebuild_hotkeys()
     return jsonify(hunt)
 
@@ -500,14 +527,99 @@ def close_action():
     return jsonify({"ok": True})
 
 
+def migrate_overlays() -> None:
+    overlays = load_overlays()
+    hunts = load_hunts()
+    changed = False
+    for o in overlays:
+        elements = o.setdefault('elements', {})
+        if 'odds' not in elements:
+            elements['odds'] = False
+            changed = True
+    for h in hunts:
+        if "displayMode" in h:
+            del h["displayMode"]
+            changed = True
+    if changed:
+        save_hunts(hunts)
+        save_overlays(overlays)
+    if overlays:
+        return
+    overlay = {
+        "id": str(uuid.uuid4()),
+        "name": "main",
+        "elements": {
+            "sprite": True,
+            "name": True,
+            "count": True,
+            "odds": False,
+        },
+        "hunts": [{"huntId": h["id"], "visible": True} for h in hunts],
+    }
+    save_overlays([overlay])
+
+
+@app.get('/api/overlays')
+def get_overlays():
+    return jsonify(load_overlays())
+
+
+@app.post('/api/overlays')
+def add_overlay():
+    data = request.json or {}
+    name = data.get('name', '').strip()
+    if not name:
+        return jsonify({'error': 'name required'}), 400
+    hunts = load_hunts()
+    overlay = {
+        'id': str(uuid.uuid4()),
+        'name': name,
+        'elements': {'sprite': True, 'name': True, 'count': True, 'odds': False},
+        'hunts': [{'huntId': h['id'], 'visible': True} for h in hunts if h.get('status', 'active') == 'active'],
+    }
+    overlays = load_overlays()
+    overlays.append(overlay)
+    save_overlays(overlays)
+    broadcast(hunts, overlays)
+    return jsonify(overlay), 201
+
+
+@app.put('/api/overlays/<overlay_id>')
+def update_overlay(overlay_id):
+    overlays = load_overlays()
+    overlay = next((o for o in overlays if o['id'] == overlay_id), None)
+    if overlay is None:
+        return jsonify({'error': 'not found'}), 404
+    data = request.json or {}
+    if 'name' in data:
+        overlay['name'] = data['name'].strip()
+    if 'hunts' in data:
+        overlay['hunts'] = data['hunts']
+    if 'elements' in data:
+        overlay['elements'] = data['elements']
+    save_overlays(overlays)
+    broadcast(load_hunts(), overlays)
+    return jsonify(overlay)
+
+
+@app.delete('/api/overlays/<overlay_id>')
+def delete_overlay(overlay_id):
+    overlays = load_overlays()
+    if len(overlays) <= 1:
+        return jsonify({'error': 'cannot delete the last overlay'}), 400
+    overlays = [o for o in overlays if o['id'] != overlay_id]
+    save_overlays(overlays)
+    broadcast(load_hunts(), overlays)
+    return jsonify({'ok': True})
+
+
 # Start
 if __name__ == "__main__":
     rebuild_hotkeys()
+    migrate_overlays()
 
     threading.Thread(
-        target=lambda: app.run(
-            host="0.0.0.0", port=3000, threaded=True, use_reloader=False
-        ),
+        target=lambda: serve(app, host='127.0.0.1', port=3000, threads=8),
         daemon=True,
     ).start()
     _wait_for_server()
@@ -517,7 +629,7 @@ if __name__ == "__main__":
 
         tray._webview_window = webview.create_window(
             "Shiny Trak",
-            "http://localhost:3000",
+            "http://127.0.0.1:3000",
             width=1100,
             height=700,
             min_size=(820, 560),
@@ -525,11 +637,12 @@ if __name__ == "__main__":
             background_color="#0D0B1A",
         )
         tray._webview_window.events.closing += _on_closing
+        os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--no-proxy-server'
         webview.start(func=_setup_tray, args=(tray._webview_window,))
         os._exit(0)
     else:
-        print("Shiny Trak running at    http://localhost:3000")
-        print("OBS overlay URL          http://localhost:3000/overlay")
+        print("Shiny Trak running at    http://127.0.0.1:3000")
+        print("OBS overlay URL          http://127.0.0.1:3000/overlay")
         if not PYNPUT_AVAILABLE:
             print("WARNING: pynput not installed - hotkeys unavailable")
-        app.run(host="0.0.0.0", port=3000, threaded=True, use_reloader=False)
+        serve(app, host='127.0.0.1', port=3000, threads=8)

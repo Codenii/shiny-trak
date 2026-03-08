@@ -20,6 +20,7 @@ DATA_DIR = os.path.join(_BASE_DIR, "data")
 DATA_FILE = os.path.join(DATA_DIR, "hunts.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 GAMES_CACHE_DIR = os.path.join(DATA_DIR, "game_cache")
+OVERLAYS_FILE = os.path.join(DATA_DIR, "overlays.json")
 
 GAME_POKEDEX_MAP: dict[str, list[str]] = {
     "Red / Blue": ["kanto"],
@@ -93,8 +94,27 @@ def save_settings(settings: dict) -> None:
         json.dump(settings, f, indent=2)
 
 
-def broadcast(hunts: list) -> None:
-    payload = json.dumps({"hunts": hunts})
+def load_overlays() -> list:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    if not os.path.exists(OVERLAYS_FILE):
+        return []
+    try:
+        with open(OVERLAYS_FILE) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
+def save_overlays(overlays: list) -> None:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(OVERLAYS_FILE, "w") as f:
+        json.dump(overlays, f, indent=2)
+
+
+def broadcast(hunts: list, overlays: list | None = None) -> None:
+    if overlays is None:
+        overlays = load_overlays()
+    payload = json.dumps({"hunts": hunts, "overlays": overlays})
     with sse_lock:
         for q in list(sse_clients):
             try:

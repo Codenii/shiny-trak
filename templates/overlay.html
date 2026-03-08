@@ -61,6 +61,13 @@
             display: inline-block;
         }
 
+        .hunt-odds {
+            color: #A78BFA;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
         @keyframes count-flash {
             0%      { color: #fbbf24; transform: scale(1); }
             40%     { color: #ffffff; transform: scale(1.15); }
@@ -76,14 +83,26 @@
     <script>
         let prevCounts = {};
 
-        function renderHunts(hunts) {
+        const OVERLAY_ID = "{{ overlay_id }}";
+
+        function renderHunts(hunts, overlays) {
+            const overlay = overlays.find(o => o.id === OVERLAY_ID);
+            if (!overlay) return;
+
+            const visibleIds = new Set(
+                overlay.hunts.filter(h => h.visible).map(h => h.huntId)
+            );
+
+            const filtered = hunts.filter(h =>
+                (h.status === 'active' || !h.status) && visibleIds.has(h.id)
+            )
             const container = document.getElementById('hunts');
             const newCounts = {};
-            hunts.forEach(h => { newCounts[h.id] = h.count; });
+            filtered.forEach(h => { newCounts[h.id] = h.count; });
 
             container.innerHTML = '';
 
-            hunts.forEach(hunt => {
+            filtered.forEach(hunt => {
                 const card = document.createElement('div');
                 card.className = 'hunt-card';
 
@@ -94,7 +113,7 @@
                 card.appendChild(sparkle);
 
                 // Sprite (full mode only)
-                if (hunt.displayMode === 'full' && hunt.spriteUrl) {
+                if (overlay.elements.sprite === true && hunt.spriteUrl) {
                     const img = document.createElement('img');
                     img.className = 'sprite';
                     img.src = hunt.spriteUrl;
@@ -104,7 +123,7 @@
                 }
 
                 // Name (name + full modes)
-                if (hunt.displayMode !== 'counter') {
+                if (overlay.elements.name === true) {
                     const name = document.createElement('span');
                     name.className = 'hunt-name';
                     name.textContent = hunt.displayName;
@@ -116,20 +135,35 @@
                     card.appendChild(sep);
                 }
 
-                // Count (always show)
-                const countEl = document.createElement('span');
-                countEl.className = 'hunt-count';
-                countEl.textContent = hunt.count.toLocaleString('en-US');
+                // Count
+                if (overlay.elements.count === true) {
+                    const countEl = document.createElement('span');
+                    countEl.className = 'hunt-count';
+                    countEl.textContent = hunt.count.toLocaleString('en-US');
+                
+                    // Flash animation if count changed
+                    if (prevCounts[hunt.id] !== undefined && prevCounts[hunt.id] !== hunt.count) {
+                        countEl.classList.add('count-flash');
+                        countEl.addEventListener('animationend', () => {
+                            countEl.classList.remove('count-flash');
+                        }, { once: true });
+                    }
 
-                // Flash animation if count changed
-                if (prevCounts[hunt.id] !== undefined && prevCounts[hunt.id] !== hunt.count) {
-                    countEl.classList.add('count-flash');
-                    countEl.addEventListener('animationend', () => {
-                        countEl.classList.remove('count-flash');
-                    }, { once: true });
+                    card.appendChild(countEl);
                 }
 
-                card.appendChild(countEl);
+                // Odds
+                if (overlay.elements.odds === true && hunt.encounterRate) {
+                    const sep2 = document.createElement('span');
+                    sep2.className = 'separator';
+                    sep2.textContent = '·';
+                    card.appendChild(sep2);
+
+                    const oddsEl = document.createElement('span');
+                    oddsEl.className = 'hunt-odds';
+                    oddsEl.textContent = `1/${hunt.encounterRate.toLocaleString('en-US')}`;
+                    card.appendChild(oddsEl);
+                }
                 container.appendChild(card);
             });
 
@@ -141,7 +175,7 @@
             es.onmessage = (e) => {
                 try {
                     const data = JSON.parse(e.data);
-                    if (data.hunts) renderHunts(data.hunts.filter(h => h.status === 'active' || !h.status));
+                    if (data.hunts && data.overlays) renderHunts(data.hunts, data.overlays);
                 } catch (err) {
                     console.error('Parse error:', err);
                 }
