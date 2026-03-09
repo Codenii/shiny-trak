@@ -440,9 +440,8 @@ def export_hunts():
         hunts = [h for h in hunts if h.get("status") == "completed"]
 
     filename = f"shiny-trak-{scope}.{fmt}"
-    download_dir = os.path.join(os.path.expanduser("~"), "Downloads")
-    os.makedirs(download_dir, exist_ok=True)
-    filepath = os.path.join(download_dir, filename)
+    os.makedirs(store.DOWNLOAD_DIR, exist_ok=True)
+    filepath = os.path.join(store.DOWNLOAD_DIR, filename)
 
     if fmt == "csv":
         fields = [

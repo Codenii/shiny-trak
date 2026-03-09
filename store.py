@@ -21,6 +21,7 @@ DATA_FILE = os.path.join(DATA_DIR, "hunts.json")
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 GAMES_CACHE_DIR = os.path.join(DATA_DIR, "game_cache")
 OVERLAYS_FILE = os.path.join(DATA_DIR, "overlays.json")
+DOWNLOAD_DIR = os.path.join(os.path.expanduser("~"), "Downloads")
 
 GAME_POKEDEX_MAP: dict[str, list[str]] = {
     "Red / Blue": ["kanto"],

@@ -49,7 +49,7 @@
                     <template x-if="capture.huntId === hunt.id && capture.field === 'hotkey'">
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs text-accent-muted listening">Press a key...</span>
-                            <button @click="cancelCapture()" class="text-xs text-white/30 hover:text-white/60 transition-colors">✕</button>
+                            <button @click="cancelCapture()" title="Cancel capture" class="text-xs text-white/30 hover:text-white/60 transition-colors">✕</button>
                         </div>
                     </template>
                     <template x-if="!(capture.huntId === hunt.id && capture.field === 'hotkey')">
@@ -58,7 +58,7 @@
                                 <span class="px-1.5 py-0.5 bg-bg-surface border border-white/10 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkey)"></span>
                             </template>
                             <template x-if="hunt.hotkey">
-                                <button @click="clearHotkey(hunt.id, 'hotkey')" class="text-white/20 hover:text-danger/70 transition-colors text-xs">✕</button>
+                                <button @click="clearHotkey(hunt.id, 'hotkey')" title="Clear increment hotkey" class="text-white/20 hover:text-danger/70 transition-colors text-xs">✕</button>
                             </template>
                             <button
                                 @click="startCapture(hunt.id, 'hotkey')"
@@ -74,7 +74,7 @@
                     <template x-if="capture.huntId === hunt.id && capture.field === 'hotkeyDecrement'">
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs text-accent-muted listening">Press a key...</span>
-                            <button @click="cancelCapture()" class="text-xs text-white/30 hover:text-white/60 transition-colors">✕</button>
+                            <button @click="cancelCapture()" title="Cancel capture" class="text-xs text-white/30 hover:text-white/60 transition-colors">✕</button>
                         </div>
                     </template>
                     <template x-if="!(capture.huntId === hunt.id && capture.field === 'hotkeyDecrement')">
@@ -83,7 +83,7 @@
                                 <span class="px-1.5 py-0.5 bg-bg-surface border border-white/10 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkeyDecrement)"></span>
                             </template>
                             <template x-if="hunt.hotkeyDecrement">
-                                <button @click="clearHotkey(hunt.id, 'hotkeyDecrement')" class="text-white/20 hover:text-danger/70 transition-colors text-xs">✕</button>
+                                <button @click="clearHotkey(hunt.id, 'hotkeyDecrement')" title="Clear decrement hotkey" class="text-white/20 hover:text-danger/70 transition-colors text-xs">✕</button>
                             </template>
                             <button
                                 @click="startCapture(hunt.id, 'hotkeyDecrement')"
