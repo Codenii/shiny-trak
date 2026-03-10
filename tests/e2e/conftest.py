@@ -6,6 +6,8 @@ import time
 
 import pytest
 
+from waitress import serve
+
 import store
 from app import app, migrate_overlays
 
@@ -31,9 +33,7 @@ def live_server():
 
     port = _find_free_port()
     threading.Thread(
-        target=lambda: app.run(
-            host="127.0.0.1", port=port, use_reloader=False, threaded=True
-        ),
+        target=lambda: serve(app, host="127.0.0.1", port=port, threads=8),
         daemon=True,
     ).start()
 
