@@ -74,6 +74,11 @@ macOS will block the app on first launch because it is not signed by an Apple-re
 You only need to do this once. If that doesn't work, go to **System Settings → Privacy & Security**, scroll down to the blocked app message, and click
 **Open Anyway**.
 
+**For hotkeys to work**, you also need to grant Input Monitoring permission:
+
+1. Open **System Settings -> Privacy & Security -> Input Monitoring**
+2. Enable the toggle next to **ShinyTrak** (or your terminal app if running from source)
+
 ---
 
 ## Usage
@@ -129,20 +134,9 @@ app is not focused.
 > ```
 > Log out and back in for the change to take effect.
 
-### macOS — Hammerspoon
+### macOS
 
-Due to macOS security restrictions, global hotkeys require [Hammerspoon](https://www.hammerspoon.org), a free macOS automation tool.
-
-**Setup:**
-
-1. Download and install Hammerspoon from [hammerspoon.org](https://www.hammerspoon.org)
-2. Launch Hammerspoon and click **Open Config** from the menu bar icon
-3. In the control panel, assign hotkeys to your hunts using the **Set** buttons
-4. Open `http://localhost:3000/api/hammerspoon` in your browser — this generates a Lua config file
-5. Copy the entire contents and paste them into your Hammerspoon config file
-6. Click **Reload Config** in the Hammerspoon menu bar icon
-
-Repeat steps 4–6 any time you add, remove, or change a hotkey.
+Hotkeys work natively on macOS - no third-party tools required. See [First Launch on macOS](#first-launch-on-macos) for the one-time Input Monitoring permission required.
 
 ---
 
