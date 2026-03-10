@@ -172,3 +172,13 @@ def test_overlay_hides_count_when_disabled(page: Page, base_url: str):
         headers={"Content-Type": "application/json"},
     )
     page.request.delete(f"{base_url}/api/hunts/{hunt['id']}")
+
+
+def test_overlay_redirect(page: Page, base_url: str):
+    page.goto(f"{base_url}/overlay")
+    expect(page).to_have_url(f"{base_url}/overlay/main")
+
+
+def test_overlay_not_found(page: Page, base_url: str):
+    resp = page.request.get(f"{base_url}/overlay/doesnotexist")
+    assert resp.status == 404

@@ -195,3 +195,17 @@ def test_copy_overlay_url(page: Page, context, base_url: str):
 
     clipboard_text = page.evaluate("async () => await navigator.clipboard.readText()")
     assert f"/overlay/{overlay['name']}" in clipboard_text
+
+
+def test_new_hunt_added_to_all_overlays(page: Page, base_url: str):
+    second = _create_overlay(page, base_url, name="second-overlay")
+
+    hunt = _create_hunt(page, base_url)
+
+    resp = page.request.get(f"{base_url}/api/overlays")
+    for overlay in resp.json():
+        hunt_ids = [h["huntId"] for h in overlay["hunts"]]
+        assert hunt["id"] in hunt_ids, f"Hunt missing from overlay '{overlay['name']}'"
+
+    page.request.delete(f"{base_url}/api/hunts/{hunt['id']}")
+    page.request.delete(f"{base_url}/api/overlays/{second['id']}")
