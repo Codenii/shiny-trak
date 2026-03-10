@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![GitHub release](https://img.shields.io/github/v/release/Codenii/shiny-trak)](https://github.com/Codenii/shiny-trak/releases/latest)
 [![CI](https://github.com/Codenii/shiny-trak/actions/workflows/build.yml/badge.svg)](https://github.com/Codenii/shiny-trak/actions/workflows/build.yml)
+[![Tests](https://github.com/Codenii/shiny-trak/actions/workflows/test.yml/badge.svg)](https://github.com/Codenii/shiny-trak/actions/workflows/test.yml)
 [![Platform](https://img.shields.io/badge/platform-Windows%20|%20macOS%20|%20Linux-blue)](https://github.com/Codenii/shiny-trak/releases/latest)
 
 A local web-based shiny Pokemon hunt tracker with a real-time OBS overlay. Track multiple hunts simultaneously, configure per-hunt display modes, and      
@@ -168,6 +169,19 @@ source in OBS.
 **Port 3000 already in use**
 Another application is using port 3000. Quit that application, or if running from source, edit the last line of `app.py` to use a different port and update
 the OBS browser source URL to match.
+
+## Development
+
+### Running Tests
+
+**Backend tests:**
+`pytest tests/ --ignore=tests/e2e -v`
+
+**E2E tests** (requires Playwright):
+`playwright install chromium  
+pytest tests/e2e/ -v`
+
+---
 
 ## Roadmap
 Shiny Trak is actively being developed. Planned features include multiple overlay support, statistics tracking, and more.  
