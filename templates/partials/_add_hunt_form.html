@@ -1,0 +1,69 @@
+<div x-show="activeTab === 'hunts'" class="px-6 py-4 border-b border-white/5 bg-bg-surface/50">
+    <div class="flex items-end gap-3">
+        <!-- Pokemon Search -->
+        <div class="flex-1 max-w-xs">
+            <label class="block text-xs font-medium text-accent-muted/70 mb-1.5 uppercase tracking-wider">Pokemon</label>
+            <div class="relative">
+                <input
+                    type="text"
+                    x-model="newHunt.name"
+                    @input="updateAutocomplete()"
+                    @keydown.arrow-down.prevent="acHighlight = Math.min(acHighlight + 1, acOptions.length - 1)"
+                    @keydown.arrow-up.prevent="acHighlight = Math.max(acHighlight - 1, 0)"
+                    @keydown.enter.prevent="acHighlight >= 0 ? selectAc(acOptions[acHighlight]) : addHunt()"
+                    @keydown.escape="acOptions = []"
+                    @blur="setTimeout(() => acOptions = [], 150)"
+                    @focus="updateAutocomplete()"
+                    placeholder="Search Pokemon..."
+                    autocomplete="off"
+                    class="w-full bg-bg-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors duration-150"
+                />
+                <!-- Autocomplete dropdown -->
+                <div
+                    x-show="acOptions.length > 0"
+                    class="absolute top-full left-0 right-0 mt-1 bg-bg-card border border-white/10 rounded-lg overflow-hidden z-50 shadow-xl"
+                >
+                    <template x-for="(option, index) in acOptions" :key="option">
+                        <div
+                            @mousedown.prevent="selectAc(option)"
+                            :class="index === acHighlight ? 'bg-primary/30 text-white' : 'text-white/80 hover:bg-white/5'"
+                            class="px-3 py-2 text-sm cursor-pointer transition-colors duration-100"
+                            x-text="option"
+                        ></div>
+                    </template>
+                </div>
+            </div>
+        </div>
+        <!-- Game (optional) -->
+        <div>
+            <label class="block text-xs font-medium text-accent-muted/70 mb-1.5 uppercase tracking-wider">Game <span class="text-white/20 normal-case tracking-normal">(optional)</span></label>
+            <select
+                x-model="newHunt.game"
+                @change="onGameChange()"
+                class="bg-bg-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-primary/60 transition-colors duration-150 cursor-pointer"
+            >
+                <option value="">Any Game</option>
+                <template x-for="game in games" :key="game">
+                    <option :value="game" x-text="game"></option>
+                </template>
+            </select>
+        </div>
+        <!-- Add Button -->
+        <button
+            @click="addHunt()"
+            :disabled="newHunt.loading || !newHunt.name.trim()"
+            class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-sm font-semibold text-white transition-colors duration-150"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span x-text="newHunt.loading ? 'Adding...' : 'Add Hunt'"></span>
+        </button>
+    </div>
+    <!-- Error Message -->
+    <p
+        x-show="newHunt.error"
+        x-text="newHunt.error"
+        class="mt-2 text-xs text-danger"
+    ></p>
+</div>

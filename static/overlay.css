@@ -1,0 +1,71 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 12px;
+}
+
+#hunts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.hunt-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(13, 11, 26, 0.88);
+    border: 1px solid rgba(114, 9, 183, 0.5);
+    border-radius: 12px;
+    padding: 10px 18px;
+    box-shadow: 0 0 16px rgba(114, 9, 183, 0.25), 0 2px 8px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    width: fit-content;
+}
+
+.sparkle { font-size: 18px; line-height: 1; }
+
+.sprite {
+    width: 64px;
+    height: 64px;
+    image-rendering: auto;
+    object-fit: contain;
+    transform: scale(2);
+    margin: 0 8px;
+}
+
+.hunt-name {
+    color: #4CC9F0;
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.separator { color: rgba(148, 163, 184, 0.5); font-size: 13px; }
+
+.hunt-count {
+    color: #fbbf24;
+    font-size: 26px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+    min-width: 7ch;
+    display: inline-block;
+}
+
+.hunt-odds {
+    color: #A78BFA;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@keyframes count-flash {
+    0%      { color: #fbbf24; transform: scale(1); }
+    40%     { color: #ffffff; transform: scale(1.15); }
+    100%    { color: #fbbf24; transform: scale(1); }
+}
+
+.count-flash { animation: count-flash 0.35s ease; }

@@ -1,0 +1,14 @@
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(114, 9, 183, 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(114, 9, 183, 0.7); }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+@keyframes listening-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.listening { animation: listening-pulse 1s ease-in-out infinite; }
