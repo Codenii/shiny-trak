@@ -87,6 +87,7 @@ def _parse_macos_hotkey(hotkey_str):
 
 
 _macos_monitor = None
+_macos_local_monitor = None
 _macos_bindings = []
 _macos_lock = threading.Lock()
 _gcd_lib = None
@@ -94,7 +95,7 @@ _gcd_cb = None
 _pending_map = None
 
 
-def _macos_handler(event):
+def _macos_global_handler(event):
     flags = event.modifierFlags() & _NS_MOD_MASK
     keycode = event.keyCode()
     raw = event.charactersIgnoringModifiers()
@@ -109,9 +110,25 @@ def _macos_handler(event):
                 break
 
 
+def _macos_local_handler(event):
+    flags = event.modifierFlags() & _NS_MOD_MASK
+    keycode = event.keyCode()
+    raw = event.charactersIgnoringModifiers()
+    char = raw.lower() if raw else ""
+    for mods, key, use_keycode, callback in _macos_bindings:
+        if flags == mods:
+            if use_keycode and keycode == key:
+                threading.Thread(target=callback, daemon=True).start()
+                return None
+            elif not use_keycode and char == key:
+                threading.Thread(target=callback, daemon=True).start()
+                return None
+    return event
+
+
 def _do_rebuild_macos(_ctx):
     """Runs on the main thread via GCD - Registers the NSEvent monitor"""
-    global _macos_monitor, _macos_bindings
+    global _macos_monitor, _macos_local_monitor, _macos_bindings
     with _macos_lock:
         if _macos_monitor is not None:
             try:
@@ -119,6 +136,12 @@ def _do_rebuild_macos(_ctx):
             except Exception:
                 pass
             _macos_monitor = None
+        if _macos_local_monitor is not None:
+            try:
+                NSEvent.removeMonitor_(_macos_local_monitor)
+            except Exception:
+                pass
+            _macos_local_monitor = None
         _macos_bindings = []
 
         if not _pending_map:
@@ -134,7 +157,12 @@ def _do_rebuild_macos(_ctx):
 
         try:
             _macos_monitor = NSEvent.addGlobalMonitorForEventsMatchingMask_handler_(
-                _NS_KEY_DOWN, _macos_handler
+                _NS_KEY_DOWN, _macos_global_handler
+            )
+            _macos_local_monitor = (
+                NSEvent.addLocalMonitorForEventsMatchingMask_handler_(
+                    _NS_KEY_DOWN, _macos_local_handler
+                )
             )
         except Exception as e:
             print(f"[hotkeys] Failed to register macOS monitor: {e}")
