@@ -106,3 +106,21 @@ def test_encounter_rate(client, hunt):
     r = client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 4096})
     assert r.status_code == 200
     assert r.get_json()["encounterRate"] == 4096
+
+
+def test_get_hunts_scope_active(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=active")
+    assert not any(h["id"] == hunt["id"] for h in resp.get_json())
+
+
+def test_get_hunts_scope_completed(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=completed")
+    assert any(h["id"] == hunt["id"] for h in resp.get_json())
+
+
+def test_get_hunts_scope_all(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=all")
+    assert any(h["id"] == hunt["id"] for h in resp.get_json())

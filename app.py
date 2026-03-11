@@ -106,7 +106,13 @@ def events():
 # Routes - API
 @app.get("/api/hunts")
 def get_hunts():
-    return jsonify(load_hunts())
+    hunts = load_hunts()
+    scope = request.args.get("scope", "active")
+    if scope == "active":
+        hunts = [h for h in hunts if h.get("status", "active") == "active"]
+    elif scope == "completed":
+        hunts = [h for h in hunts if h.get("status") == "completed"]
+    return jsonify(hunts)
 
 
 @app.post("/api/hunts")
@@ -544,6 +550,32 @@ def delete_overlay(overlay_id):
     save_overlays(overlays)
     broadcast(load_hunts(), overlays)
     return jsonify({"ok": True})
+
+
+# Stats
+@app.get("/api/stats")
+def get_stats():
+    hunts = load_hunts()
+    by_game = {}
+    for hunt in hunts:
+        game = hunt.get("game") or None
+        if game not in by_game:
+            by_game[game] = {"completed": 0, "active": 0}
+        status = hunt.get("status", "active")
+        if status == "completed":
+            by_game[game]["completed"] += 1
+        else:
+            by_game[game]["active"] += 1
+
+    return jsonify(
+        {
+            "totalCompleted": sum(1 for h in hunts if h.get("status") == "completed"),
+            "totalActive": sum(
+                1 for h in hunts if h.get("status", "active") == "active"
+            ),
+            "byGame": {str(k): v for k, v in by_game.items()},
+        }
+    )
 
 
 # Start

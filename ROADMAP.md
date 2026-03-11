@@ -11,7 +11,7 @@ Current public release.
 **Core Features:**  
 - Multiple concurrent shiny tracking
 - Real-time OBS browser source overlay
-- Global hotkeys (Windows/Linux via pynput, macOS via Hammerspoon)
+- Global hotkeys (Windows/Linux via pynput, macOS via AppKit and PyObjC)
 - Pokemon auto-complete with shiny sprites provided by [PokeAPI](https://pokeapi.co)
 - System tray / menu bar icon
 - Native desktop window via PyWebView (no longer need to use a separate browser tab)
