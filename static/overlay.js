@@ -1,9 +1,47 @@
 let prevCounts = {};
 
-function renderHunts(hunts, overlays) {
+function renderOverlay(hunts, overlays) {
   const overlay = overlays.find((o) => o.id === OVERLAY_ID);
   if (!overlay) return;
 
+  if (overlay.type === 'stats') {
+    renderStats(hunts, overlay);
+  } else {
+    renderHunts(hunts, overlay);
+  }
+}
+
+function renderStats(hunts, overlay) {
+  const container = document.getElementById('hunts');
+  container.innerHTML = '';
+
+  const game = overlay.game || null;
+  const filtered = game ? hunts.filter((h) => h.game === game) : hunts;
+  const completed = filtered.filter((h) => h.status === 'completed');
+  const active = filtered.filter((h) => h.status === 'active' || !h.status);
+  const totalCompleted = hunts.filter((h) => h.status === 'completed').length;
+
+  if (overlay.elements.totalCompleted) {
+    const total = document.createElement('div');
+    total.className = 'stat-line';
+    total.textContent = `Total Completed: ${totalCompleted} hunt${completed.length !== 1 ? 's' : ''}`;
+    container.appendChild(total);
+  }
+
+  if (overlay.elements.breakdown === 'completed') {
+    const line = document.createElement('div');
+    line.className = 'stat-line';
+    line.textContent = `Completed: ${completed.length} / ${completed.length + active.length} total`;
+    container.appendChild(line);
+  } else if (overlay.elements.breakdown === 'active') {
+    const line = document.createElement('div');
+    line.className = 'stat-line';
+    line.textContent = `Completed: ${completed.length} · Active: ${active.length}`;
+    container.appendChild(line);
+  }
+}
+
+function renderHunts(hunts, overlay) {
   const visibleIds = new Set(
     overlay.hunts.filter((h) => h.visible).map((h) => h.huntId),
   );
@@ -96,7 +134,7 @@ function connect() {
   es.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data);
-      if (data.hunts && data.overlays) renderHunts(data.hunts, data.overlays);
+      if (data.hunts && data.overlays) renderOverlay(data.hunts, data.overlays);
     } catch (err) {
       console.error("Parse error:", err);
     }

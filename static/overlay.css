@@ -69,3 +69,19 @@ body {
 }
 
 .count-flash { animation: count-flash 0.35s ease; }
+
+.stat-line {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(13, 11, 26, 0.88);
+    border: 1px solid rgba(114, 9, 183, 0.5);
+    border-radius: 12px;
+    padding: 10px 18px;
+    box-shadow: 0 0 16px rgba(114, 9, 183, 0.25), 0 2px 8px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    color: #4CC9F0;
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    width: fit-content;
+}

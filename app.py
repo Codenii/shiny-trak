@@ -66,7 +66,30 @@ def overlay_default():
 @app.route("/overlay/<name>")
 def overlay(name):
     overlays = load_overlays()
-    ov = next((o for o in overlays if o["name"].lower() == name.lower()), None)
+    if name.endswith("-hunt"):
+        base = name[:-5]
+        ov = next(
+            (
+                o
+                for o in overlays
+                if o["name"].lower() == base.lower()
+                and (o.get("type", "hunt") == "hunt")
+            ),
+            None,
+        )
+    elif name.endswith("-stats"):
+        base = name[:-6]
+        ov = next(
+            (
+                o
+                for o in overlays
+                if o["name"].lower() == base.lower() and o.get("type") == "stats"
+            ),
+            None,
+        )
+    else:
+        ov = next((o for o in overlays if o["name"].lower() == name.lower()), None)
+
     if ov is None:
         return "Overlay not found", 404
     return render_template("overlay.html", overlay_id=ov["id"])
@@ -139,13 +162,7 @@ def add_hunt():
     hunts.append(hunt)
     save_hunts(hunts)
 
-    overlays = load_overlays()
-    for o in overlays:
-        if not any(h["huntId"] == hunt["id"] for h in o["hunts"]):
-            o["hunts"].append({"huntId": hunt["id"], "visible": True})
-
-    save_overlays(overlays)
-    broadcast(hunts, overlays)
+    broadcast(hunts, load_overlays())
     rebuild_hotkeys()
     return jsonify(hunt), 201
 
@@ -186,6 +203,8 @@ def update_hunt(hunt_id):
 def delete_hunt(hunt_id):
     overlays = load_overlays()
     for o in overlays:
+        if o.get("type", "hunt") != "hunt":
+            continue
         o["hunts"] = [h for h in o["hunts"] if h["huntId"] != hunt_id]
 
     hunts = load_hunts()
@@ -471,6 +490,9 @@ def migrate_overlays() -> None:
         if "odds" not in elements:
             elements["odds"] = False
             changed = True
+        if "type" not in o:
+            o["type"] = "hunt"
+            changed = True
     for h in hunts:
         if "displayMode" in h:
             del h["displayMode"]
@@ -483,6 +505,7 @@ def migrate_overlays() -> None:
     overlay = {
         "id": str(uuid.uuid4()),
         "name": "main",
+        "type": "hunt",
         "elements": {
             "sprite": True,
             "name": True,
@@ -505,17 +528,36 @@ def add_overlay():
     name = data.get("name", "").strip()
     if not name:
         return jsonify({"error": "name required"}), 400
+    overlay_type = data.get("type", "hunt")
+    if overlay_type not in ("hunt", "stats"):
+        return jsonify({"error": "type must be hunt or stats"}), 400
+
     hunts = load_hunts()
-    overlay = {
-        "id": str(uuid.uuid4()),
-        "name": name,
-        "elements": {"sprite": True, "name": True, "count": True, "odds": False},
-        "hunts": [
-            {"huntId": h["id"], "visible": True}
-            for h in hunts
-            if h.get("status", "active") == "active"
-        ],
-    }
+
+    if overlay_type == "hunt":
+        overlay = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "type": "hunt",
+            "elements": {"sprite": True, "name": True, "count": True, "odds": False},
+            "hunts": [
+                {"huntId": h["id"], "visible": True}
+                for h in hunts
+                if h.get("status", "active") == "active"
+            ],
+        }
+    else:
+        overlay = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "type": "stats",
+            "elements": {
+                "totalCompleted": True,
+                "breakdown": "completed",
+            },
+            "game": None,
+        }
+
     overlays = load_overlays()
     overlays.append(overlay)
     save_overlays(overlays)
@@ -536,6 +578,8 @@ def update_overlay(overlay_id):
         overlay["hunts"] = data["hunts"]
     if "elements" in data:
         overlay["elements"] = data["elements"]
+    if "game" in data:
+        overlay["game"] = data["game"]
     save_overlays(overlays)
     broadcast(load_hunts(), overlays)
     return jsonify(overlay)
@@ -544,12 +588,10 @@ def update_overlay(overlay_id):
 @app.delete("/api/overlays/<overlay_id>")
 def delete_overlay(overlay_id):
     overlays = load_overlays()
-    if len(overlays) <= 1:
-        return jsonify({"error": "cannot delete the last overlay"}), 400
     overlays = [o for o in overlays if o["id"] != overlay_id]
     save_overlays(overlays)
     broadcast(load_hunts(), overlays)
-    return jsonify({"ok": True})
+    return "", 204
 
 
 # Stats

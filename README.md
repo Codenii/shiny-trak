@@ -110,14 +110,17 @@ In OBS, add a **Browser Source** with the following settings:
 
 | Setting | Value |
 |---|---|
-| URL | `http://localhost:3000/overlay` |
+| URL | `http://localhost:3000/overlay/<name>-hunt` or `http://localhost:3000/overlay/<name>-stats` |
 | Width | 400 (or whatever fits your layout) |
 | Height | 300 (or whatever fits your layout) |
 | Shutdown source when not visible | Unchecked |
 | Refresh browser when scene becomes active | Unchecked |
 
-The overlay has a transparent background and will update instantly whenever you change a counter.
+Replace `<name>` with the name of your overlay. For example, a hunt overlay named "main" would be `http://localhost:3000/overlay/main-hunt`. Whereas a stats overlay named "test" would be `http://localhost:3000/overlay/test-stats`
 
+The overlay has a transparent background and will update instantly whenever you change a counter or your stats update.
+
+> **Upgrading from v1.3.x?** Overlay URLs have changed. Update your OBS browser sources from `/overlay/<name>` to `/overlay/<name>-hunt`. Also note that hunts are no longer automatically added to overlays - you will need to manually assign hunts to each overlay via the Overlays tab.
 ---
 
 ## Hotkeys
