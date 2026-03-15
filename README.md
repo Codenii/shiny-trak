@@ -12,15 +12,29 @@ increment counters via global hotkeys without leaving your game.
 ## Features
 
 - Track multiple concurrent shiny hunts
-- Three display modes per hunt: counter only, name + counter, and sprite + name + counter
 - Real-time OBS browser source overlay
-- Global hotkeys for increment and decrement (no app focus needed)
-- Manual count entry for starting a hunt mid-way through
-- Auto-complete Pokemon name search with shiny sprites from PokeAPI
-- Game field per hunt with game-filtering Pokemon autocomplete
-- Mark hunt as found with optional notes field
-- Hunt history tab showing completed hunts
-- Export hunt data to CSV or JSON
+- Global hotkeys (Windows/Linux via pynput, macOS via AppKit and PyObjC)
+- Pokemon auto-complete with shiny sprites provided by [PokeAPI](https://pokeapi.co)
+- System tray / menu bar icon
+- Native desktop window via PyWebView (no longer need to use a separate browser tab)
+- Full UI overhaul using Alpine.js and Tailwind CSS
+- Improved layout, animations, and overall polish
+- Add a game field to each hunt
+- Active / completed status with the ability to mark a hunt as found/finished
+- Start date and end date for time tracking of each individual hunt
+- Hunt notes, not shown on the overlay. Used as way to provide personal notes/information on a specific hunt
+- Export hunt history to CSV or JSON
+- Multiple named overlays, each with their own unique URL
+- Assign any hunt to any overlay (or to multiple overlays at the same time)
+- Show/hide individual hunts per overlay on demand
+- Encounter rate / odds chance display as an optional overlay element
+- Full backend unit test suite (pytest)
+- Full E2E test suite (pytest-playwright)
+- GitHub Actions CI running both suites on Ubuntu, Windows, and macOS
+- Total completed hunt count
+- Per-game hunt breakdowns
+- Statistics overlays (total hunts, game-specific totals)
+- Milestone alerts at shiny odds multiples (1x, 2x, 3x base rate)
 
 ---
 
@@ -181,6 +195,4 @@ pytest tests/e2e/ -v`
 ---
 
 ## Roadmap
-Shiny Trak is actively being developed. Planned features include multiple overlay support, statistics tracking, and more.  
-
-See the full [Roadmap](ROADMAP.md) for details.
+Shiny Trak is actively being developed. See the full [Roadmap](ROADMAP.md) for details

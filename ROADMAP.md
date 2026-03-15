@@ -6,10 +6,10 @@ Progress on each version can be tracked via [GitHub Milestones](https://github.c
 
 ---
 
-## Current Release - v1.3.1
+## Current Release - v1.4.0
 Current public release.  
 **Core Features:**  
-- Multiple concurrent shiny tracking
+- Track multiple concurrent shiny hunts
 - Real-time OBS browser source overlay
 - Global hotkeys (Windows/Linux via pynput, macOS via AppKit and PyObjC)
 - Pokemon auto-complete with shiny sprites provided by [PokeAPI](https://pokeapi.co)
@@ -29,17 +29,28 @@ Current public release.
 - Full backend unit test suite (pytest)
 - Full E2E test suite (pytest-playwright)
 - GitHub Actions CI running both suites on Ubuntu, Windows, and macOS
+- Total completed hunt count
+- Per-game hunt breakdowns
+- Statistics overlays (total hunts, game-specific totals)
+- Milestone alerts at shiny odds multiples (1x, 2x, 3x base rate)
 
 ---
 
 ## Upcoming Releases
 
-### v1.4.0 - Statistics
-Track your progress across all hunts.
-- Total completed hunt count
-- Per-game hunt breakdowns
-- Statistics overlays (total hunts, game-specific totals)
-- Milestone alerts at shiny odds multiples (1x, 2x, 3x base rate)
+### v1.4.1 - UI Polish
+Update and improve the overall UI of the application
+- Remove white card borders
+- Audit and improve overal visual consistency
+
+### v1.4.2 - Code Quality
+Improvements to the overall code quality of the application and test suite
+- Add data-* attribute to templates where needed
+- Audit existing E2E selectors
+- Identify and resolve/fix any tests that pass by coincidence
+- Add input validation for overlay elements schema
+- Remove auto-creation of 'main' overlay on startup and update test accordingly
+- Add overlay picker when creating a new hunt
 
 ### v2.0.0 - Overlay Studio
 Deep overlay customization.
@@ -74,3 +85,4 @@ An optional web platform for sharing hunt history and statistics publicly.
 - **v1.2.0** - Game field, hunt history, mark as found, CSV/JSON export
 - **v1.3.0** - Overlay System
 - **v1.3.1** - Testing and CI
+- **v1.4.0** - Statistics
