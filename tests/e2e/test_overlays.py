@@ -192,6 +192,7 @@ def test_copy_overlay_url(page: Page, context, base_url: str):
 
     page.goto(base_url)
     page.get_by_text("Overlays", exact=True).click()
+    page.wait_for_selector("button[title='Copy overlay URL']")
     page.locator("button[title='Copy overlay URL']").first.click()
 
     clipboard_text = page.evaluate("async () => await navigator.clipboard.readText()")
