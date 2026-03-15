@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build:css": "tailwindcss -i ./tailwind.input.css -o ./static/tailwind.css",
+    "watch:css": "tailwindcss -i ./tailwind.input.css -o ./static/tailwind.css --watch"
+  },
   "devDependencies": {
     "tailwindcss": "^3.4.19"
   }

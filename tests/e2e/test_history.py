@@ -65,7 +65,7 @@ def test_mark_found_shows_count_in_history(page: Page, base_url: str):
         .locator(".text-gold", has_text="150")
     ).to_be_visible()
 
-    resp = page.request.get(f"{base_url}/api/hunts")
+    resp = page.request.get(f"{base_url}/api/hunts?scope=all")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
     assert h["count"] == 150
 
@@ -91,7 +91,7 @@ def test_mark_found_immediate_when_behavior_is_never(page: Page, base_url: str):
         page.get_by_placeholder("How did you find it? Any thoughts...")
     ).not_to_be_visible()
 
-    resp = page.request.get(f"{base_url}/api/hunts")
+    resp = page.request.get(f"{base_url}/api/hunts?scope=all")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
     assert h["status"] == "completed"
 
@@ -122,7 +122,7 @@ def test_delete_from_history(page: Page, base_url: str):
             "button[title='Delete']"
         ).click()
 
-    resp = page.request.get(f"{base_url}/api/hunts")
+    resp = page.request.get(f"{base_url}/api/hunts?scope=all")
     assert not any(h["id"] == hunt["id"] for h in resp.json())
 
 

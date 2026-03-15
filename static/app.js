@@ -24,6 +24,9 @@ function app() {
     exportScope: "all",
     exportFormat: "json",
     exportMessage: "",
+    overlaySubTab: "hunt",
+    milestoneAlert: null,
+    _milestoneTimer: null,
     _captureListener: null,
 
     // Lifecycle
@@ -53,6 +56,14 @@ function app() {
         if (data.hunts) this.hunts = data.hunts;
         if (data.overlays) this.overlays = data.overlays;
       };
+      es.addEventListener("milestone", (e) => {
+        const data = JSON.parse(e.data);
+        this.milestoneAlert = data;
+        clearTimeout(this._milestoneTimer);
+        this._milestoneTimer = setTimeout(() => {
+          this.milestoneAlert = null;
+        }, 5000);
+      });
       es.onerror = () => {
         es.close();
         setTimeout(() => this.connect(), 3000);
@@ -347,7 +358,10 @@ function app() {
       await fetch("/api/overlays", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: this.newOverlayName.trim() }),
+        body: JSON.stringify({
+          name: this.newOverlayName.trim(),
+          type: this.overlaySubTab,
+        }),
       });
       this.newOverlayName = "";
       this.showNewOverlay = false;
@@ -360,9 +374,15 @@ function app() {
     async toggleHuntVisibility(overlayId, huntId) {
       const overlay = this.overlays.find((o) => o.id === overlayId);
       if (!overlay) return;
-      const updatedHunts = overlay.hunts.map((h) =>
-        h.huntId === huntId ? { ...h, visible: !h.visible } : h,
-      );
+      const existing = overlay.hunts.find((h) => h.huntId === huntId);
+      let updatedHunts;
+      if (existing) {
+        updatedHunts = overlay.hunts.map((h) =>
+          h.huntId === huntId ? { ...h, visible: !h.visible } : h,
+        );
+      } else {
+        updatedHunts = [...overlay.hunts, { huntId, visible: true }];
+      }
       await fetch(`/api/overlays/${overlayId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -381,9 +401,18 @@ function app() {
       });
     },
 
+    async updateOverlayGame(overlayId, game) {
+      await fetch(`/api/overlays/${overlayId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game: game || null }),
+      });
+    },
+
     async copyOverlayUrl(overlay) {
+      const suffix = overlay.type === "stats" ? "-stats" : "-hunt";
       await navigator.clipboard.writeText(
-        `http://localhost:3000/overlay/${overlay.name}`,
+        `http://localhost:3000/overlay/${overlay.name}${suffix}`,
       );
     },
 

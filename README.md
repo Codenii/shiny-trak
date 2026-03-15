@@ -12,15 +12,29 @@ increment counters via global hotkeys without leaving your game.
 ## Features
 
 - Track multiple concurrent shiny hunts
-- Three display modes per hunt: counter only, name + counter, and sprite + name + counter
 - Real-time OBS browser source overlay
-- Global hotkeys for increment and decrement (no app focus needed)
-- Manual count entry for starting a hunt mid-way through
-- Auto-complete Pokemon name search with shiny sprites from PokeAPI
-- Game field per hunt with game-filtering Pokemon autocomplete
-- Mark hunt as found with optional notes field
-- Hunt history tab showing completed hunts
-- Export hunt data to CSV or JSON
+- Global hotkeys (Windows/Linux via pynput, macOS via AppKit and PyObjC)
+- Pokemon auto-complete with shiny sprites provided by [PokeAPI](https://pokeapi.co)
+- System tray / menu bar icon
+- Native desktop window via PyWebView (no longer need to use a separate browser tab)
+- Full UI overhaul using Alpine.js and Tailwind CSS
+- Improved layout, animations, and overall polish
+- Add a game field to each hunt
+- Active / completed status with the ability to mark a hunt as found/finished
+- Start date and end date for time tracking of each individual hunt
+- Hunt notes, not shown on the overlay. Used as way to provide personal notes/information on a specific hunt
+- Export hunt history to CSV or JSON
+- Multiple named overlays, each with their own unique URL
+- Assign any hunt to any overlay (or to multiple overlays at the same time)
+- Show/hide individual hunts per overlay on demand
+- Encounter rate / odds chance display as an optional overlay element
+- Full backend unit test suite (pytest)
+- Full E2E test suite (pytest-playwright)
+- GitHub Actions CI running both suites on Ubuntu, Windows, and macOS
+- Total completed hunt count
+- Per-game hunt breakdowns
+- Statistics overlays (total hunts, game-specific totals)
+- Milestone alerts at shiny odds multiples (1x, 2x, 3x base rate)
 
 ---
 
@@ -74,6 +88,11 @@ macOS will block the app on first launch because it is not signed by an Apple-re
 You only need to do this once. If that doesn't work, go to **System Settings → Privacy & Security**, scroll down to the blocked app message, and click
 **Open Anyway**.
 
+**For hotkeys to work**, you also need to grant Input Monitoring permission:
+
+1. Open **System Settings -> Privacy & Security -> Input Monitoring**
+2. Enable the toggle next to **ShinyTrak** (or your terminal app if running from source)
+
 ---
 
 ## Usage
@@ -105,14 +124,17 @@ In OBS, add a **Browser Source** with the following settings:
 
 | Setting | Value |
 |---|---|
-| URL | `http://localhost:3000/overlay` |
+| URL | `http://localhost:3000/overlay/<name>-hunt` or `http://localhost:3000/overlay/<name>-stats` |
 | Width | 400 (or whatever fits your layout) |
 | Height | 300 (or whatever fits your layout) |
 | Shutdown source when not visible | Unchecked |
 | Refresh browser when scene becomes active | Unchecked |
 
-The overlay has a transparent background and will update instantly whenever you change a counter.
+Replace `<name>` with the name of your overlay. For example, a hunt overlay named "main" would be `http://localhost:3000/overlay/main-hunt`. Whereas a stats overlay named "test" would be `http://localhost:3000/overlay/test-stats`
 
+The overlay has a transparent background and will update instantly whenever you change a counter or your stats update.
+
+> **Upgrading from v1.3.x?** Overlay URLs have changed. Update your OBS browser sources from `/overlay/<name>` to `/overlay/<name>-hunt`. Also note that hunts are no longer automatically added to overlays - you will need to manually assign hunts to each overlay via the Overlays tab.
 ---
 
 ## Hotkeys
@@ -129,20 +151,9 @@ app is not focused.
 > ```
 > Log out and back in for the change to take effect.
 
-### macOS — Hammerspoon
+### macOS
 
-Due to macOS security restrictions, global hotkeys require [Hammerspoon](https://www.hammerspoon.org), a free macOS automation tool.
-
-**Setup:**
-
-1. Download and install Hammerspoon from [hammerspoon.org](https://www.hammerspoon.org)
-2. Launch Hammerspoon and click **Open Config** from the menu bar icon
-3. In the control panel, assign hotkeys to your hunts using the **Set** buttons
-4. Open `http://localhost:3000/api/hammerspoon` in your browser — this generates a Lua config file
-5. Copy the entire contents and paste them into your Hammerspoon config file
-6. Click **Reload Config** in the Hammerspoon menu bar icon
-
-Repeat steps 4–6 any time you add, remove, or change a hotkey.
+Hotkeys work natively on macOS - no third-party tools required. See [First Launch on macOS](#first-launch-on-macos) for the one-time Input Monitoring permission required.
 
 ---
 
@@ -184,6 +195,4 @@ pytest tests/e2e/ -v`
 ---
 
 ## Roadmap
-Shiny Trak is actively being developed. Planned features include multiple overlay support, statistics tracking, and more.  
-
-See the full [Roadmap](ROADMAP.md) for details.
+Shiny Trak is actively being developed. See the full [Roadmap](ROADMAP.md) for details

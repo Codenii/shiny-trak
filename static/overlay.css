@@ -69,3 +69,48 @@ body {
 }
 
 .count-flash { animation: count-flash 0.35s ease; }
+
+.stat-line {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(13, 11, 26, 0.88);
+    border: 1px solid rgba(114, 9, 183, 0.5);
+    border-radius: 12px;
+    padding: 10px 18px;
+    box-shadow: 0 0 16px rgba(114, 9, 183, 0.25), 0 2px 8px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    color: #4CC9F0;
+    font-size: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    width: fit-content;
+}
+
+#milestone-banner {
+    display: none;
+    position: fixed;
+    background: rgba(13, 11, 26, 0.95);
+    border: 1px solid rgba(251, 191, 36, 0.6);
+    border-radius: 12px;
+    padding: 10px 24px;
+    box-shadow: 0 0 24px rgba(251, 191, 36, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    color: #FBBF24;
+    font-size: 20px;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+@keyframes milestone-in-out {
+    0%      { opacity: 0; transform: translateY(-10px); }
+    10%     { opacity: 1; transform: translateY(0); }
+    80%     { opacity: 1; transform: translateY(0); }
+    100%    {opacity: 0; transform: translateY(-10px); }
+}
+
+.milestone-show {
+    animation: milestone-in-out 4s ease forwards;
+}

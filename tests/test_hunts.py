@@ -1,3 +1,6 @@
+import app as app_module
+
+
 def test_get_hunts_empty(client):
     r = client.get("/api/hunts")
     assert r.status_code == 200
@@ -106,3 +109,63 @@ def test_encounter_rate(client, hunt):
     r = client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 4096})
     assert r.status_code == 200
     assert r.get_json()["encounterRate"] == 4096
+
+
+def test_get_hunts_scope_active(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=active")
+    assert not any(h["id"] == hunt["id"] for h in resp.get_json())
+
+
+def test_get_hunts_scope_completed(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=completed")
+    assert any(h["id"] == hunt["id"] for h in resp.get_json())
+
+
+def test_get_hunts_scope_all(client, hunt):
+    client.post(f"/api/hunts/{hunt['id']}/complete", json={})
+    resp = client.get("/api/hunts?scope=all")
+    assert any(h["id"] == hunt["id"] for h in resp.get_json())
+
+
+def test_milestone_fires_at_1x(client, hunt, monkeypatch):
+    client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 3, "count": 2})
+    fired = []
+    monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
+    client.post(f"/api/hunts/{hunt['id']}/increment")
+    assert len(fired) == 1
+    assert fired[0]["count"] == 3
+
+
+def test_milestone_fires_at_2x(client, hunt, monkeypatch):
+    client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 3, "count": 5})
+    fired = []
+    monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
+    client.post(f"/api/hunts/{hunt['id']}/increment")
+    assert len(fired) == 1
+    assert fired[0]["count"] == 6
+
+
+def test_milestone_not_at_non_multiple(client, hunt, monkeypatch):
+    client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 3, "count": 3})
+    fired = []
+    monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
+    client.post(f"/api/hunts/{hunt['id']}/increment")
+    assert len(fired) == 0
+
+
+def test_milestone_no_encounter_rate(client, hunt, monkeypatch):
+    fired = []
+    monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
+    client.post(f"/api/hunts/{hunt['id']}/increment")
+    assert len(fired) == 0
+
+
+def test_milestone_disabled_in_settings(client, hunt, monkeypatch):
+    client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": 3, "count": 2})
+    client.put("/api/settings", json={"milestone_alerts": False})
+    fired = []
+    monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
+    client.post(f"/api/hunts/{hunt['id']}/increment")
+    assert len(fired) == 0

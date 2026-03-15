@@ -1,0 +1,45 @@
+<div x-show="activeTab === 'stats'" class="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+    <!-- Total Hunts -->
+    <div class="bg-bg-card border border-white/8 rounded-xl p-5" id="stats-overall">
+        <div class="text-xs font-semibold uppercase tracking-widest text-white/30 mb-4">Overall</div>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-bg-surface rounded-lg p-4 text-center">
+                <div class="text-3xl font-bold text-gold" x-text="hunts.filter(h => h.status === 'completed').length"></div>
+                <div class="text-xs text-white/40 mt-1">Completed</div>
+            </div>
+            <div class="bg-bg-surface rounded-lg p-4 text-center">
+                <div class="text-3xl font-bold text-primary-light" x-text="hunts.filter(h => h.status === 'active' || !h.status).length"></div>
+                <div class="text-xs text-white/40 mt-1">Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- By Game -->
+    <div class="bg-bg-card border border-white/8 rounded-xl p-5" x-show="hunts.length > 0" id="stats-by-game">
+        <div class="text-xs font-semibold uppercase tracking-widest text-white/30 mb-4">By Game</div>
+        <div class="space-y-2">
+            <template x-for="game in [...new Set(hunts.map(h => h.game || 'No Game'))].sort()" :key="game">
+                <div class="flex items-center justify-between py-2 border-b border-white/5 last:border-0" :data-game="game">
+                    <span class="text-sm text-white/70" x-text="game"></span>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-white/30">
+                            <span class="text-gold font-semibold" x-text="hunts.filter(h => (h.game || 'No Game') === game && h.status === 'completed').length"></span>
+                            completed
+                        </span>
+                        <span class="text-xs text-white/30">
+                            <span class="text-primary-light font-semibold" x-text="hunts.filter(h => (h.game || 'No Game') === game && (h.status === 'active' || !h.status)).length"></span>
+                            active
+                        </span>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="hunts.length === 0" class="flex flex-col items-center justify-center h-full text-center py-16">
+        <div class="text-5xl mb-4">📊</div>
+        <div class="text-white/40 text-sm font-medium">No hunts yet</div>
+        <div class="text-white/20 text-xs mt-1">Add a hunt to start tracking statistics</div>
+    </div>
+</div>
