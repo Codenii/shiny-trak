@@ -10,14 +10,15 @@ permissions:
 jobs:
     build:
         strategy:
-            matrix:
-                include:
-                    - os: windows-latest
-                      artifact_path: dist/ShinyTrak.exe
-                    - os: macos-latest
-                      artifact_path: dist/ShinyTrak.app.zip
-                    - os: ubuntu-latest
-                      artifact_path: dist/ShinyTrak
+          fail-fast: false
+          matrix:
+            include:
+                - os: windows-latest
+                  artifact_path: dist/ShinyTrak.exe
+                - os: macos-latest
+                  artifact_path: dist/ShinyTrak.app.zip
+                - os: ubuntu-latest
+                  artifact_path: dist/ShinyTrak
         runs-on: ${{ matrix.os }}
 
         steps:
