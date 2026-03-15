@@ -78,6 +78,19 @@
                 </template>
             </div>
         </div>
+        <!-- Milestone Alerts -->
+        <div class="mt-5 pt-5 border-t border-white/5">
+            <div class="text-xs font-medium text-accent-muted/70 uppercase tracking-wider mb-3">Milestone Alerts</div>
+            <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors duration-150">
+                <input
+                    type="checkbox"
+                    x-model="settings.milestone_alerts"
+                    @change="saveSettings()"
+                    class="accent-primary"
+                />
+                <span class="text-sm text-white/80">Show alerts when a hunt reaches 1x, 2x, 3x odds</span>
+            </label>
+        </div>
     </div>
 </div>
 <!-- Mark as Found Dialog -->
@@ -179,4 +192,17 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
     </svg>
     <span class="text-sm text-white/80" x-text="exportMessage"></span>
+</div>
+<!-- Milestone Alert Banner -->
+<div
+    x-show="milestoneAlert"
+    x-transition.opacity
+    style="z-index: 70;"
+    class="fixed top-5 left-1/2 -translate-x-1/2 bg-bg-surface border border-yellow-400/40 rounded-xl px-5 py-3 shadow-2xl flex items-center gap-3 pointer-events-none"
+>
+    <span class="text-lg">✨</span>
+    <span
+        class="text-sm font-semibold text-yellow-300"
+        x-text="milestoneAlert ? `${milestoneAlert.displayName} reached ${milestoneAlert.multiple}x odds! (${milestoneAlert.count.toLocaleString('en-US')} encounters)` : ''"
+    ></span>
 </div>

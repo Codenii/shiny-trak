@@ -77,6 +77,7 @@ def load_settings() -> dict:
     defaults = {
         "close_behavior": "ask",
         "mark_found_behavior": "ask",
+        "milestone_alerts": True,
     }
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(SETTINGS_FILE):
@@ -116,9 +117,29 @@ def broadcast(hunts: list, overlays: list | None = None) -> None:
     if overlays is None:
         overlays = load_overlays()
     payload = json.dumps({"hunts": hunts, "overlays": overlays})
+    msg = f"data: {payload}\n\n"
     with sse_lock:
         for q in list(sse_clients):
             try:
-                q.put_nowait(payload)
+                q.put_nowait(msg)
+            except Exception:
+                pass
+
+
+def broadcast_milestone(hunt: dict) -> None:
+    payload = json.dumps(
+        {
+            "huntId": hunt["id"],
+            "displayName": hunt["displayName"],
+            "count": hunt["count"],
+            "encounterRate": hunt["encounterRate"],
+            "multiple": hunt["count"] // hunt["encounterRate"],
+        }
+    )
+    msg = f"event: milestone\ndata: {payload}\n\n"
+    with sse_lock:
+        for q in list(sse_clients):
+            try:
+                q.put_nowait(msg)
             except Exception:
                 pass

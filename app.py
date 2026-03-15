@@ -34,6 +34,7 @@ from store import (
     save_overlays,
     save_settings,
     broadcast,
+    broadcast_milestone,
     sse_clients,
     sse_lock,
 )
@@ -109,7 +110,7 @@ def events():
             while True:
                 try:
                     payload = q.get(timeout=15)
-                    yield f"data: {payload}\n\n"
+                    yield payload
                 except Empty:
                     yield ": keepalive\n\n"
         except GeneratorExit:
@@ -225,6 +226,11 @@ def increment(hunt_id):
     hunt["count"] += 1
     save_hunts(hunts)
     broadcast(hunts, load_overlays())
+    rate = hunt.get("encounterRate")
+    if rate and hunt["count"] % rate == 0:
+        settings = load_settings()
+        if settings.get("milestone_alerts", True):
+            broadcast_milestone(hunt)
     return jsonify(hunt)
 
 
@@ -451,7 +457,7 @@ def get_settings():
 def update_settings():
     data = request.json or {}
     settings = load_settings()
-    for k in {"close_behavior", "mark_found_behavior"}:
+    for k in {"close_behavior", "mark_found_behavior", "milestone_alerts"}:
         if k in data:
             settings[k] = data[k]
     save_settings(settings)

@@ -29,3 +29,14 @@ def test_update_unknown_key_ignored(client):
     )
     assert r.status_code == 200
     assert "hacked" not in r.get_json()
+
+
+def test_milestone_alerts_default_true(client):
+    r = client.get("/api/settings")
+    assert r.get_json()["milestone_alerts"] is True
+
+
+def test_update_milestone_alerts(client):
+    r = client.put("/api/settings", json={"milestone_alerts": False})
+    assert r.status_code == 200
+    assert r.get_json()["milestone_alerts"] is False

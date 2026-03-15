@@ -1,10 +1,12 @@
 let prevCounts = {};
+let _currentOverlays = [];
 
 function renderOverlay(hunts, overlays) {
+  _currentOverlays = overlays;
   const overlay = overlays.find((o) => o.id === OVERLAY_ID);
   if (!overlay) return;
 
-  if (overlay.type === 'stats') {
+  if (overlay.type === "stats") {
     renderStats(hunts, overlay);
   } else {
     renderHunts(hunts, overlay);
@@ -12,30 +14,30 @@ function renderOverlay(hunts, overlays) {
 }
 
 function renderStats(hunts, overlay) {
-  const container = document.getElementById('hunts');
-  container.innerHTML = '';
+  const container = document.getElementById("hunts");
+  container.innerHTML = "";
 
   const game = overlay.game || null;
   const filtered = game ? hunts.filter((h) => h.game === game) : hunts;
-  const completed = filtered.filter((h) => h.status === 'completed');
-  const active = filtered.filter((h) => h.status === 'active' || !h.status);
-  const totalCompleted = hunts.filter((h) => h.status === 'completed').length;
+  const completed = filtered.filter((h) => h.status === "completed");
+  const active = filtered.filter((h) => h.status === "active" || !h.status);
+  const totalCompleted = hunts.filter((h) => h.status === "completed").length;
 
   if (overlay.elements.totalCompleted) {
-    const total = document.createElement('div');
-    total.className = 'stat-line';
-    total.textContent = `Total Completed: ${totalCompleted} hunt${completed.length !== 1 ? 's' : ''}`;
+    const total = document.createElement("div");
+    total.className = "stat-line";
+    total.textContent = `Total Completed: ${totalCompleted} hunt${completed.length !== 1 ? "s" : ""}`;
     container.appendChild(total);
   }
 
-  if (overlay.elements.breakdown === 'completed') {
-    const line = document.createElement('div');
-    line.className = 'stat-line';
+  if (overlay.elements.breakdown === "completed") {
+    const line = document.createElement("div");
+    line.className = "stat-line";
     line.textContent = `Completed: ${completed.length} / ${completed.length + active.length} total`;
     container.appendChild(line);
-  } else if (overlay.elements.breakdown === 'active') {
-    const line = document.createElement('div');
-    line.className = 'stat-line';
+  } else if (overlay.elements.breakdown === "active") {
+    const line = document.createElement("div");
+    line.className = "stat-line";
     line.textContent = `Completed: ${completed.length} · Active: ${active.length}`;
     container.appendChild(line);
   }
@@ -60,6 +62,7 @@ function renderHunts(hunts, overlay) {
   filtered.forEach((hunt) => {
     const card = document.createElement("div");
     card.className = "hunt-card";
+    card.dataset.huntId = hunt.id;
 
     // Sparkle
     const sparkle = document.createElement("span");
@@ -129,6 +132,30 @@ function renderHunts(hunts, overlay) {
   prevCounts = newCounts;
 }
 
+function showMilestoneBanner(data) {
+  const banner = document.getElementById("milestone-banner");
+  if (!banner) return;
+  const card = document.querySelector(`[data-hunt-id="${data.huntId}"]`);
+  if (card) {
+    const rect = card.getBoundingClientRect();
+    banner.style.top = rect.top + "px";
+    banner.style.left = rect.left + "px";
+    banner.style.width = rect.width + "px";
+    banner.style.height = rect.height + "px";
+  }
+  banner.textContent = `✨ ${data.multiple}x Odds! (${data.count.toLocaleString("en-US")} encounters)`;
+  banner.style.display = "flex";
+  banner.style.alignItems = "center";
+  banner.style.justifyContent = "center";
+  banner.classList.remove("milestone-show");
+  void banner.offsetWidth;
+  banner.classList.add("milestone-show");
+  setTimeout(() => {
+    banner.classList.remove("milestone-show");
+    banner.style.display = "none";
+  }, 4000);
+}
+
 function connect() {
   const es = new EventSource("/events");
   es.onmessage = (e) => {
@@ -139,6 +166,20 @@ function connect() {
       console.error("Parse error:", err);
     }
   };
+  es.addEventListener("milestone", (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      const overlay = _currentOverlays.find((o) => o.id === OVERLAY_ID);
+      if (!overlay || overlay.type !== "hunt") return;
+      const isAssigned = overlay.hunts.some(
+        (h) => h.huntId === data.huntId && h.visible,
+      );
+      if (!isAssigned) return;
+      showMilestoneBanner(data);
+    } catch (err) {
+      console.error("Milestone parse error:", err);
+    }
+  });
   es.onerror = () => {
     es.close();
     setTimeout(connect, 3000);

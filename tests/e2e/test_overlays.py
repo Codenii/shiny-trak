@@ -116,9 +116,9 @@ def test_overlay_element_toggle_odds(page: Page, base_url: str):
         lambda r: f"/api/overlays/{overlay['id']}" in r.url
         and r.request.method == "PUT"
     ):
-        page.locator("label").filter(has_text="Odds").locator(
-            "input[type='checkbox']"
-        ).click()
+        page.locator(".bg-bg-card").filter(has_text=overlay["name"]).locator(
+            "label"
+        ).filter(has_text="Odds").locator("input[type='checkbox']").click()
 
     resp = page.request.get(f"{base_url}/api/overlays")
     updated = next(o for o in resp.json() if o["id"] == overlay["id"])
@@ -129,10 +129,9 @@ def test_overlay_element_toggle_odds(page: Page, base_url: str):
         lambda r: f"/api/overlays/{overlay['id']}" in r.url
         and r.request.method == "PUT"
     ):
-        page.locator("label").filter(has_text="Odds").locator(
-            "input[type='checkbox']"
-        ).click()
-
+        page.locator(".bg-bg-card").filter(has_text=overlay["name"]).locator(
+            "label"
+        ).filter(has_text="Odds").locator("input[type='checkbox']").click()
     resp = page.request.get(f"{base_url}/api/overlays")
     updated = next(o for o in resp.json() if o["id"] == overlay["id"])
     assert updated["elements"]["odds"] is False

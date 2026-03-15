@@ -2,7 +2,14 @@ import ctypes
 import platform
 import threading
 
-from store import broadcast, load_hunts, load_overlays, save_hunts
+from store import (
+    broadcast,
+    load_hunts,
+    load_overlays,
+    save_hunts,
+    load_settings,
+    broadcast_milestone,
+)
 
 
 # pynput (Windows / Linux)
@@ -197,6 +204,11 @@ def increment_hunt_by_id(hunt_id: str) -> None:
             h["count"] += 1
             save_hunts(hunts)
             broadcast(hunts, load_overlays())
+            rate = h.get("encounterRate")
+            if rate and h["count"] % rate == 0:
+                settings = load_settings()
+                if settings.get("milestone_alerts", True):
+                    broadcast_milestone(h)
             return
 
 
