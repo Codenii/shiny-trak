@@ -52,11 +52,21 @@ Improvements to the overall code quality of the application and test suite
 - Remove auto-creation of 'main' overlay on startup and update test accordingly
 - Add overlay picker when creating a new hunt
 
+### v1.4.3 - Data Management
+Give users full control over their hunt data - import, retroactive editing, and custom game support.
+- Import hunt data from a JSON or CSV file
+- Edit start date on active and completed hunts
+- Edit end date on completed hunts
+- Edit encounter count on completed hunts
+- Create a hunt as already completed at creation time, with optional manual start date, end date, encounters count, and game selection
+- Custom game support (for rom hack support) - persists in settings, full Pokemon list autocomplete, PokeAPI optional (graceful no-sprite fallback for custom games)
+
 ### v2.0.0 - Overlay Studio
 Deep overlay customization.
 - Custom CSS editor per overlay, with a live preview
 - Expanded display options (ability to choose exactly what each overlay shows)
 - More layout and style controls
+- Custom sprite support - upload a local image for any hunt, stored in data/sprites/ and served via the app (works in OBS overlay)
 
 ### v2.1.0 - OBS Integration
 Tighter integration with OBS beyond just being a simple browser source.
