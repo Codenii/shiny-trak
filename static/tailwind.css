@@ -990,16 +990,16 @@ video {
   background-color: rgb(127 222 255 / 0.2);
 }
 
+.bg-primary\/25 {
+  background-color: rgb(127 222 255 / 0.25);
+}
+
 .bg-primary\/30 {
   background-color: rgb(127 222 255 / 0.3);
 }
 
 .bg-transparent {
   background-color: transparent;
-}
-
-.bg-primary\/25 {
-  background-color: rgb(127 222 255 / 0.25);
 }
 
 .object-contain {
@@ -1361,12 +1361,12 @@ video {
   background-color: rgb(127 222 255 / 0.3);
 }
 
-.hover\:bg-primary\/5:hover {
-  background-color: rgb(127 222 255 / 0.05);
-}
-
 .hover\:bg-primary\/40:hover {
   background-color: rgb(127 222 255 / 0.4);
+}
+
+.hover\:bg-primary\/5:hover {
+  background-color: rgb(127 222 255 / 0.05);
 }
 
 .hover\:text-danger:hover {

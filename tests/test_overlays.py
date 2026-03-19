@@ -111,11 +111,6 @@ def test_overlay_route_hunt_suffix(client, overlay):
     assert r.status_code == 200
 
 
-def test_overlay_route_backwards_compat(client, overlay):
-    r = client.get(f"/overlay/{overlay['name']}")
-    assert r.status_code == 200
-
-
 def test_overlay_route_stats_suffix(client):
     o = client.post(
         "/api/overlays", json={"name": "mystats", "type": "stats"}
@@ -194,3 +189,8 @@ def test_can_delete_last_overlay(client, overlay):
     r = client.delete(f"/api/overlays/{overlay['id']}")
     assert r.status_code == 204
     assert client.get("/api/overlays").get_json() == []
+
+
+def test_overlay_bare_path_not_found(client):
+    r = client.get("/overlay")
+    assert r.status_code == 404

@@ -37,7 +37,7 @@
     <!-- Overlay Cards -->
     <div class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
         <template x-for="overlay in overlays.filter(o => (o.type || 'hunt') === overlaySubTab)" :key="overlay.id">
-            <div class="bg-bg-card rounded-xl overflow-hidden">
+            <div :data-overlay-id="overlay.id" class="bg-bg-card rounded-xl overflow-hidden">
                 <!-- Overlay Header -->
                 <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
                     @click="selectedOverlayId = selectedOverlayId === overlay.id ? null : overlay.id">
@@ -58,7 +58,7 @@
                         <div class="text-xs text-text-muted/50 py-2">No active hunts</div>
                     </template>
                     <template x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)" :key="hunt.id">
-                        <label class="flex items-center gap-3 py-1.5 cursor-pointer group">
+                        <label :data-hunt-id="hunt.id" class="flex items-center gap-3 py-1.5 cursor-pointer group">
                             <input
                                 type="checkbox"
                                 :checked="overlay.hunts.find(h => h.huntId === hunt.id)?.visible ?? false"
@@ -71,19 +71,19 @@
                     </template>
                     <div class="border-t border-primary/10 px-4 py-2 flex items-center gap-4">
                         <span class="text-xs text-text-muted/50 uppercase tracking-wider">Show</span>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
+                        <label data-testid="toggle-sprite" class="flex items-center gap-1.5 cursor-pointer">
                             <input type="checkbox" :checked="overlay.elements.sprite" @change="updateOverlayElement(overlay.id, 'sprite', $event.target.checked)" class="accent-primary" />
                             <span class="text-xs text-text-muted">Sprite</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
+                        <label data-testid="toggle-name" class="flex items-center gap-1.5 cursor-pointer">
                             <input type="checkbox" :checked="overlay.elements.name" @change="updateOverlayElement(overlay.id, 'name', $event.target.checked)" class="accent-primary" />
                             <span class="text-xs text-text-muted">Name</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
+                        <label data-testid="toggle-count" class="flex items-center gap-1.5 cursor-pointer">
                             <input type="checkbox" :checked="overlay.elements.count" @change="updateOverlayElement(overlay.id, 'count', $event.target.checked)" class="accent-primary" />
                             <span class="text-xs text-text-muted">Count</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
+                        <label data-testid="toggle-odds" class="flex items-center gap-1.5 cursor-pointer">
                             <input type="checkbox" :checked="overlay.elements.odds" @change="updateOverlayElement(overlay.id, 'odds', $event.target.checked)" class="accent-primary" />
                             <span class="text-xs text-text-muted">Odds</span>
                         </label>

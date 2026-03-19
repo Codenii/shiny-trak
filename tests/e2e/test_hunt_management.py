@@ -27,7 +27,9 @@ def test_delete_hunt(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "DELETE"
     ):
-        page.locator("button[title='Delete Hunt']").first.click()
+        page.locator(
+            f"[data-hunt-id='{hunt['id']}'] button[title='Delete Hunt']"
+        ).click()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     assert not any(h["id"] == hunt["id"] for h in resp.json())
@@ -40,7 +42,9 @@ def test_set_encounter_rate(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "PUT"
     ):
-        odds_input = page.get_by_placeholder("Odds").first
+        odds_input = page.locator(
+            f"[data-hunt-id='{hunt['id']}'] input[placeholder='Odds']"
+        )
         odds_input.fill("4096")
         odds_input.dispatch_event("change")
 
@@ -58,9 +62,9 @@ def test_change_game(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "PUT"
     ):
-        page.locator(".bg-bg-card").filter(has_text="Geodude").locator(
-            "select"
-        ).first.select_option(label="Scarlet / Violet")
+        page.locator(f"[data-hunt-id='{hunt['id']}'] select").select_option(
+            label="Scarlet / Violet"
+        )
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])

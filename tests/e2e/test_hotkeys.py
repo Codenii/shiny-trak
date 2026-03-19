@@ -23,8 +23,8 @@ def test_set_increment_hotkey(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
     page.goto(base_url)
 
-    card = page.locator(".bg-bg-card").filter(has_text="Zubat")
-    card.locator("button", has_text="Set").first.click()
+    card = page.locator(f"[data-hunt-id='{hunt['id']}']")
+    card.locator("button[title='Edit increment hotkey']").click()
     expect(page.get_by_text("Press a key...")).to_be_visible()
 
     with page.expect_response(
@@ -43,8 +43,8 @@ def test_set_decrement_hotkey(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
     page.goto(base_url)
 
-    card = page.locator(".bg-bg-card").filter(has_text="Zubat")
-    card.locator("button", has_text="Set").nth(1).click()
+    card = page.locator(f"[data-hunt-id='{hunt['id']}']")
+    card.locator("button[title='Edit decrement hotkey']").click()
     expect(page.get_by_text("Press a key...")).to_be_visible()
 
     with page.expect_response(
@@ -71,7 +71,9 @@ def test_clear_increment_hotkey(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "PUT"
     ):
-        page.locator("button[title='Clear increment hotkey']").first.click()
+        page.locator(
+            f"[data-hunt-id='{hunt['id']}'] button[title='Clear increment hotkey']"
+        ).click()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
@@ -92,7 +94,9 @@ def test_clear_decrement_hotkey(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "PUT"
     ):
-        page.locator("button[title='Clear decrement hotkey']").first.click()
+        page.locator(
+            f"[data-hunt-id='{hunt['id']}'] button[title='Clear decrement hotkey']"
+        ).click()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
@@ -105,8 +109,8 @@ def test_cancel_hotkey_capture(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
     page.goto(base_url)
 
-    card = page.locator(".bg-bg-card").filter(has_text="Zubat")
-    card.locator("button", has_text="Set").first.click()
+    card = page.locator(f"[data-hunt-id='{hunt['id']}']")
+    card.locator("button[title='Edit increment hotkey']").click()
     expect(page.get_by_text("Press a key...")).to_be_visible()
 
     page.locator("button[title='Cancel capture']").click()
@@ -130,9 +134,13 @@ def test_hotkey_persistence(page: Page, base_url: str):
     page.goto(base_url)
     page.reload()
 
-    card = page.locator(".bg-bg-card").filter(has_text="Zubat")
-    expect(card.locator("span.font-mono", has_text="Ctrl+F7")).to_be_visible()
-    expect(card.locator("span.font-mono", has_text="Shift+F7")).to_be_visible()
+    card = page.locator(f"[data-hunt-id='{hunt['id']}']")
+    expect(
+        card.locator("[data-testid='badge-hotkey']", has_text="Ctrl+F7")
+    ).to_be_visible()
+    expect(
+        card.locator("[data-testid='badge-hotkey-decrement']", has_text="Shift+F7")
+    ).to_be_visible()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])

@@ -61,7 +61,7 @@ def control_panel():
 
 @app.route("/overlay")
 def overlay_default():
-    return redirect("/overlay/main")
+    return "", 404
 
 
 @app.route("/overlay/<name>")
@@ -506,21 +506,6 @@ def migrate_overlays() -> None:
     if changed:
         save_hunts(hunts)
         save_overlays(overlays)
-    if overlays:
-        return
-    overlay = {
-        "id": str(uuid.uuid4()),
-        "name": "main",
-        "type": "hunt",
-        "elements": {
-            "sprite": True,
-            "name": True,
-            "count": True,
-            "odds": False,
-        },
-        "hunts": [{"huntId": h["id"], "visible": True} for h in hunts],
-    }
-    save_overlays([overlay])
 
 
 @app.get("/api/overlays")

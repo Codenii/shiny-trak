@@ -6,7 +6,7 @@ Progress on each version can be tracked via [GitHub Milestones](https://github.c
 
 ---
 
-## Current Release - v1.4.0
+## Current Release - v1.4.1
 Current public release.  
 **Core Features:**  
 - Track multiple concurrent shiny hunts
@@ -33,15 +33,12 @@ Current public release.
 - Per-game hunt breakdowns
 - Statistics overlays (total hunts, game-specific totals)
 - Milestone alerts at shiny odds multiples (1x, 2x, 3x base rate)
+- Remove white card borders
+- Audit and improve overal visual consistency
 
 ---
 
 ## Upcoming Releases
-
-### v1.4.1 - UI Polish
-Update and improve the overall UI of the application
-- Remove white card borders
-- Audit and improve overal visual consistency
 
 ### v1.4.2 - Code Quality
 Improvements to the overall code quality of the application and test suite
@@ -49,7 +46,7 @@ Improvements to the overall code quality of the application and test suite
 - Audit existing E2E selectors
 - Identify and resolve/fix any tests that pass by coincidence
 - Add input validation for overlay elements schema
-- Remove auto-creation of 'main' overlay on startup and update test accordingly
+- Remove autoi-creation of 'main' overlay on startup and update test accordingly
 - Add overlay picker when creating a new hunt
 
 ### v1.4.3 - Data Management
@@ -96,3 +93,4 @@ An optional web platform for sharing hunt history and statistics publicly.
 - **v1.3.0** - Overlay System
 - **v1.3.1** - Testing and CI
 - **v1.4.0** - Statistics
+- **v1.4.1** - UI Polish

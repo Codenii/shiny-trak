@@ -23,7 +23,7 @@ def test_mark_found_notes_appear_in_history(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
     page.goto(base_url)
 
-    page.locator("button[title='Mark as Found']").first.click()
+    page.locator(f"[data-hunt-id='{hunt['id']}'] button[title='Mark as Found']").click()
     expect(
         page.get_by_placeholder("How did you find it? Any thoughts...")
     ).to_be_visible()
@@ -60,9 +60,9 @@ def test_mark_found_shows_count_in_history(page: Page, base_url: str):
     page.goto(base_url)
     page.get_by_text("History", exact=True).click()
     expect(
-        page.locator(".bg-bg-card")
-        .filter(has_text="Meowth")
-        .locator(".text-gold", has_text="150")
+        page.locator(
+            f"[data-hunt-id='{hunt['id']}'] [data-testid='final-count']", has_text="150"
+        )
     ).to_be_visible()
 
     resp = page.request.get(f"{base_url}/api/hunts?scope=all")
@@ -85,7 +85,9 @@ def test_mark_found_immediate_when_behavior_is_never(page: Page, base_url: str):
         lambda r: f"/api/hunts/{hunt['id']}/complete" in r.url
         and r.request.method == "POST"
     ):
-        page.locator("button[title='Mark as Found']").first.click()
+        page.locator(
+            f"[data-hunt-id='{hunt['id']}'] button[title='Mark as Found']"
+        ).click()
 
     expect(
         page.get_by_placeholder("How did you find it? Any thoughts...")
@@ -118,9 +120,7 @@ def test_delete_from_history(page: Page, base_url: str):
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "DELETE"
     ):
-        page.locator(".bg-bg-card").filter(has_text="Meowth").locator(
-            "button[title='Delete']"
-        ).click()
+        page.locator(f"[data-hunt-id='{hunt['id']}'] button[title='Delete']").click()
 
     resp = page.request.get(f"{base_url}/api/hunts?scope=all")
     assert not any(h["id"] == hunt["id"] for h in resp.json())

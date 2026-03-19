@@ -10,7 +10,7 @@
     </div>
     <!-- Completed Hunt Cards -->
     <template x-for="hunt in hunts.filter(h => h.status === 'completed')" :key="hunt.id">
-        <div class="bg-bg-card rounded-xl p-4 flex items-center gap-4 transition-colors duration-150">
+        <div :data-hunt-id="hunt.id" class="bg-bg-card rounded-xl p-4 flex items-center gap-4 transition-colors duration-150">
             <!-- Sprite -->
             <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center">
                 <template x-if="hunt.spriteUrl">
@@ -35,7 +35,7 @@
                 <div x-show="hunt.notes" class="mt-1 text-xs text-text-muted italic truncate" x-text="hunt.notes"></div>
             </div>
             <!-- Final Count -->
-            <div class="flex-shrink-0 text-gold font-bold text-lg tabular-nums" x-text="hunt.count.toLocaleString('en-US')"></div>
+            <div data-testid="final-count" class="flex-shrink-0 text-gold font-bold text-lg tabular-nums" x-text="hunt.count.toLocaleString('en-US')"></div>
             <!-- Delete -->
             <button
                 @click="deleteHunt(hunt.id)"
