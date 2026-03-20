@@ -694,6 +694,14 @@ video {
   height: 100vh;
 }
 
+.h-3 {
+  height: 0.75rem;
+}
+
+.max-h-40 {
+  max-height: 10rem;
+}
+
 .w-10 {
   width: 2.5rem;
 }
@@ -740,6 +748,10 @@ video {
 
 .w-full {
   width: 100%;
+}
+
+.w-3 {
+  width: 0.75rem;
 }
 
 .min-w-0 {
@@ -875,6 +887,10 @@ video {
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whitespace-nowrap {
   white-space: nowrap;
 }
 
@@ -1288,6 +1304,14 @@ video {
 
 .placeholder-text-muted\/60::placeholder {
   color: rgb(144 122 214 / 0.6);
+}
+
+.placeholder-text-muted\/40::-moz-placeholder {
+  color: rgb(144 122 214 / 0.4);
+}
+
+.placeholder-text-muted\/40::placeholder {
+  color: rgb(144 122 214 / 0.4);
 }
 
 .accent-primary {

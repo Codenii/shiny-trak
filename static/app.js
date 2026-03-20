@@ -15,7 +15,7 @@ function app() {
     markFoundNotes: "",
     showExport: false,
     acHighlight: -1,
-    newHunt: { name: "", game: "", error: "", loading: false },
+    newHunt: { name: "", game: "", error: "", loading: false, overlayIds: [], newOverlayName: '', showNewOverlay: false, showOverlayPicker: false },
     capture: { huntId: null, field: null },
     settings: { close_behavior: "ask", mark_found_behavior: "ask" },
     showCloseDialog: false,
@@ -104,10 +104,12 @@ function app() {
 
     // Hunt operations
     async addHunt() {
-      const name = this.newHunt.name.trim();
+      const name = this.newHunt.name.trim()
       if (!name) return;
+
       this.newHunt.loading = true;
-      this.newHunt.error = "";
+      this.newHunt.error = '';
+
       try {
         const pokemon = await fetch(`/api/pokemon/${encodeURIComponent(name)}`).then(
           (r) => r.json(),
@@ -116,20 +118,35 @@ function app() {
           this.newHunt.error = pokemon.error;
           return;
         }
-        await fetch("/api/hunts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+
+        const hunt = await fetch('/api/hunts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             pokemon: pokemon.pokemon,
             displayName: pokemon.displayName,
             spriteUrl: pokemon.spriteUrl,
             game: this.newHunt.game || null,
           }),
-        });
-        this.newHunt.name = "";
+        }).then((r) => r.json());
+
+        for (const overlayId of this.newHunt.overlayIds) {
+          const overlay = this.overlays.find((o) => o.id === overlayId);
+          if (!overlay) continue;
+          await fetch(`/api/overlays/${overlayId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              hunts: [...overlay.hunts, { huntId: hunt.id, visible: true }],
+            }),
+          });
+        }
+        this.newHunt.name = '';
+        this.newHunt.overlayIds = [];
+        this.newHunt.showOverlayPicker = false;
         this.acOptions = [];
       } catch {
-        this.newHunt.error = "Failed to add hunt";
+        this.newHunt.error = 'Failed to add hunt';
       } finally {
         this.newHunt.loading = false;
       }
@@ -365,6 +382,43 @@ function app() {
       });
       this.newOverlayName = "";
       this.showNewOverlay = false;
+    },
+
+    async addOverlayFromForm() {
+      const name = this.newHunt.newOverlayName.trim();
+      if (!name) return;
+      const overlay = await fetch('/api/overlays', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, type: 'hunt' }),
+      }).then((r) => r.json());
+      this.overlays = [...this.overlays, overlay];
+      this.newHunt.overlayIds = [...this.newHunt.overlayIds, overlay.id];
+      this.newHunt.newOverlayName = '';
+      this.newHunt.showNewOverlay = false;
+    },
+
+    newHuntOverlayLabel() {
+      if (this.newHunt.overlayIds.length === 0) return 'No overlay';
+      if (this.newHunt.overlayIds.length === 1) {
+        const overlay = this.overlays.find((o) => o.id === this.newHunt.overlayIds[0]);
+        return overlay ? overlay.name : '1 overlay';
+      }
+      return `${this.newHunt.overlayIds.length} overlays`;
+    },
+
+    huntOverlaysAllSelected() {
+      const huntOverlays = this.overlays.filter((o) => (o.type || 'hunt') === 'hunt');
+      return huntOverlays.length > 0 && huntOverlays.every((o) => this.newHunt.overlayIds.includes(o.id));
+    },
+
+    toggleSelectAllOverlays() {
+      const huntOverlays = this.overlays.filter((o) => (o.type || 'hunt') === 'hunt');
+      if (this.huntOverlaysAllSelected()) {
+        this.newHunt.overlayIds = [];
+      } else {
+        this.newHunt.overlayIds = huntOverlays.map((o) => o.id);
+      }
     },
 
     async deleteOverlay(id) {
