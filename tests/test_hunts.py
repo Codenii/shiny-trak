@@ -169,3 +169,55 @@ def test_milestone_disabled_in_settings(client, hunt, monkeypatch):
     monkeypatch.setattr(app_module, "broadcast_milestone", lambda h: fired.append(h))
     client.post(f"/api/hunts/{hunt['id']}/increment")
     assert len(fired) == 0
+
+
+def test_add_hunt_missing_pokemon(client):
+    r = client.post(
+        "/api/hunts", json={"displayName": "Pikachu", "spriteUrl": None, "game": None}
+    )
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "pokemon required"
+
+
+def test_add_hunt_missing_display_name(client):
+    r = client.post(
+        "/api/hunts", json={"pokemon": "pikachu", "spriteUrl": None, "game": None}
+    )
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "displayName required"
+
+
+def test_update_hunt_invalid_count(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"count": "abc"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "count must be a number"
+
+
+def test_update_hunt_invalid_encounter_rate(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": "def"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "encounterRate must be a positive integer or null"
+
+
+def test_update_hunt_negative_encounter_rate(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"encounterRate": -1})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "encounterRate must be a positive integer or null"
+
+
+def test_update_hunt_empty_display_name(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"displayName": " "})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "displayName must be a non-empty string"
+
+
+def test_update_hunt_invalid_game_type(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"game": 123})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "game must be a string or null"
+
+
+def test_update_hunt_invalid_notes_type(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"notes": 123})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "notes must be a string or null"

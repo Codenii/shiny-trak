@@ -194,3 +194,104 @@ def test_can_delete_last_overlay(client, overlay):
 def test_overlay_bare_path_not_found(client):
     r = client.get("/overlay")
     assert r.status_code == 404
+
+
+def test_update_overlay_empty_name(client, overlay):
+    r = client.put(f"/api/overlays/{overlay['id']}", json={"name": "  "})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "name is required"
+
+
+def test_update_overlay_elements_not_dict(client, overlay):
+    r = client.put(f"/api/overlays/{overlay['id']}", json={"elements": "bad"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "elements must be an object"
+
+
+def test_update_hunt_overlay_elements_missing_key(client, overlay):
+    r = client.put(
+        f"/api/overlays/{overlay['id']}",
+        json={"elements": {"sprite": True, "name": True, "count": True}},
+    )
+    assert r.status_code == 400
+    assert (
+        r.get_json()["error"]
+        == "hunt overlay elements must contain exactly: ['count', 'name', 'odds', 'sprite']"
+    )
+
+
+def test_update_hunt_overlay_elements_extra_key(client, overlay):
+    r = client.put(
+        f"/api/overlays/{overlay['id']}",
+        json={
+            "elements": {
+                "sprite": True,
+                "name": True,
+                "count": True,
+                "odds": False,
+                "extra": True,
+            }
+        },
+    )
+    assert r.status_code == 400
+    assert (
+        r.get_json()["error"]
+        == "hunt overlay elements must contain exactly: ['count', 'name', 'odds', 'sprite']"
+    )
+
+
+def test_update_hunt_overlay_elements_wrong_type(client, overlay):
+    r = client.put(
+        f"/api/overlays/{overlay['id']}",
+        json={"elements": {"sprite": True, "name": True, "count": True, "odds": "yes"}},
+    )
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "hunt overlay elements must all be booleans"
+
+
+def test_update_stats_overlay_total_completed_wrong_type(client):
+    o = client.post(
+        "/api/overlays", json={"name": "stats-val", "type": "stats"}
+    ).get_json()
+    r = client.put(
+        f"/api/overlays/{o['id']}",
+        json={"elements": {"totalCompleted": "yes", "breakdown": "completed"}},
+    )
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "totalCompleted must be a boolean"
+
+
+def test_update_stats_overlay_breakdown_invalid_value(client):
+    o = client.post(
+        "/api/overlays", json={"name": "stats-val2", "type": "stats"}
+    ).get_json()
+    r = client.put(
+        f"/api/overlays/{o['id']}",
+        json={"elements": {"totalCompleted": True, "breakdown": "invalid"}},
+    )
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "breakdown must be 'completed', 'active', or null"
+
+
+def test_update_overlay_hunts_not_a_list(client, overlay):
+    r = client.put(f"/api/overlays/{overlay['id']}", json={"hunts": "bad"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "hunts must be a list"
+
+
+def test_update_overlay_hunts_invalid_entry(client, overlay):
+    r = client.put(
+        f"/api/overlays/{overlay['id']}",
+        json={"hunts": [{"huntId": "abc", "visible": "yes"}]},
+    )
+    assert r.status_code == 400
+    assert (
+        r.get_json()["error"]
+        == "each hunt entry must have huntId (string) and visible (boolean)"
+    )
+
+
+def test_update_overlay_game_invalid_type(client, overlay):
+    r = client.put(f"/api/overlays/{overlay['id']}", json={"game": 123})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "game must be a string or null"
