@@ -9,17 +9,16 @@ import urllib.request
 import uuid
 from queue import Empty, Queue
 
-from waitress import serve
-
 from flask import (
     Flask,
     Response,
     jsonify,
+    redirect,
     render_template,
     request,
-    redirect,
     stream_with_context,
 )
+from waitress import serve
 
 import store
 import tray
@@ -27,19 +26,18 @@ from hotkeys import PYNPUT_AVAILABLE, rebuild_hotkeys
 from store import (
     GAME_POKEDEX_MAP,
     GAMES_CACHE_DIR,
+    broadcast,
+    broadcast_milestone,
     load_hunts,
     load_overlays,
     load_settings,
     save_hunts,
     save_overlays,
     save_settings,
-    broadcast,
-    broadcast_milestone,
     sse_clients,
     sse_lock,
 )
 from tray import WEBVIEW_AVAILABLE, _on_closing, _setup_tray, _wait_for_server
-
 
 if getattr(sys, "frozen", False):
     _TEMPLATE_DIR = os.path.join(sys._MEIPASS, "templates")
@@ -597,11 +595,7 @@ def add_overlay():
             "name": name,
             "type": "hunt",
             "elements": {"sprite": True, "name": True, "count": True, "odds": False},
-            "hunts": [
-                {"huntId": h["id"], "visible": True}
-                for h in hunts
-                if h.get("status", "active") == "active"
-            ],
+            "hunts": [],
         }
     else:
         overlay = {

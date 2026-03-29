@@ -8,8 +8,10 @@ def test_settings_panel_opens(page: Page, base_url: str):
     page.get_by_role("button", name="Settings").click()
     expect(page.get_by_text("When closing the window")).to_be_visible()
     expect(page.get_by_text("When marking a hunt as found")).to_be_visible()
-    expect(page.locator("input[name='close_behavior']").first).to_be_visible()
-    expect(page.locator("input[name='mark_found_behavior']").first).to_be_visible()
+    expect(page.locator("input[name='close_behavior'][value='ask']")).to_be_visible()
+    expect(
+        page.locator("input[name='mark_found_behavior'][value='ask']")
+    ).to_be_visible()
 
 
 def test_settings_close_behavior_saved(page: Page, base_url: str):

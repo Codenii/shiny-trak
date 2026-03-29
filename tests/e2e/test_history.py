@@ -35,10 +35,10 @@ def test_mark_found_notes_appear_in_history(page: Page, base_url: str):
         lambda r: f"/api/hunts/{hunt['id']}/complete" in r.url
         and r.request.method == "POST"
     ):
-        page.get_by_role("button", name="Mark as Found").last.click()
+        page.locator("[data-testid='confirm-mark-found']").click()
 
     page.get_by_text("History", exact=True).click()
-    expect(page.get_by_text("Meowth", exact=True).first).to_be_visible()
+    expect(page.locator(f"[data-hunt-id='{hunt['id']}']")).to_be_visible()
     expect(page.get_by_text("Got it on encounter 42!")).to_be_visible()
 
     page.request.delete(f"{base_url}/api/hunts/{hunt['id']}")
@@ -115,7 +115,7 @@ def test_delete_from_history(page: Page, base_url: str):
 
     page.goto(base_url)
     page.get_by_text("History", exact=True).click()
-    expect(page.get_by_text("Meowth", exact=True).first).to_be_visible()
+    expect(page.locator(f"[data-hunt-id='{hunt['id']}']")).to_be_visible()
 
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "DELETE"
@@ -138,7 +138,7 @@ def test_completed_hunt_persists_in_history(page: Page, base_url: str):
     page.reload()
 
     page.get_by_text("History", exact=True).click()
-    expect(page.get_by_text("Meowth", exact=True).first).to_be_visible()
+    expect(page.locator(f"[data-hunt-id='{hunt['id']}']")).to_be_visible()
     expect(page.get_by_text("Persistence test")).to_be_visible()
 
     page.request.delete(f"{base_url}/api/hunts/{hunt['id']}")

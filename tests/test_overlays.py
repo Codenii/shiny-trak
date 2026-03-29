@@ -170,7 +170,9 @@ def test_update_stats_overlay_game(client):
 
 def test_migrate_overlays_adds_type(client):
     # Create an overlay with no type direcly in store
-    import store, json
+    import json
+
+    import store
     from app import migrate_overlays
 
     overlay = {
@@ -295,3 +297,9 @@ def test_update_overlay_game_invalid_type(client, overlay):
     r = client.put(f"/api/overlays/{overlay['id']}", json={"game": 123})
     assert r.status_code == 400
     assert r.get_json()["error"] == "game must be a string or null"
+
+
+def test_new_overlay_starts_with_empty_hunts(client, hunt):
+    r = client.post("/api/overlays", json={"name": "new-overlay"})
+    assert r.status_code == 201
+    assert r.get_json()["hunts"] == []

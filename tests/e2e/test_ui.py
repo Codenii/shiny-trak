@@ -30,13 +30,17 @@ def test_control_panel_loads(page: Page, base_url: str):
 def test_add_hunt(page: Page, base_url: str):
     page.goto(base_url)
     page.get_by_placeholder("Search Pokemon...").fill("pikachu")
-    page.get_by_role("button", name="Add Hunt").click()
-    expect(page.get_by_text("Pikachu", exact=True).first).to_be_visible(timeout=15000)
 
-    resp = page.request.get(f"{base_url}/api/hunts")
-    pikachu = next((h for h in resp.json() if h["pokemon"] == "pikachu"), None)
-    if pikachu:
-        page.request.delete(f"{base_url}/api/hunts/{pikachu['id']}")
+    with page.expect_response(
+        lambda r: "/api/hunts" in r.url and r.request.method == "POST"
+    ) as response_info:
+        page.get_by_role("button", name="Add Hunt").click()
+
+    pikachu = response_info.value.json()
+    expect(page.locator(f"[data-hunt-id='{pikachu['id']}']")).to_be_visible(
+        timeout=15000
+    )
+    page.request.delete(f"{base_url}/api/hunts/{pikachu['id']}")
 
 
 def test_increment_decrement(page: Page, base_url: str):
@@ -65,16 +69,16 @@ def test_increment_decrement(page: Page, base_url: str):
 def test_mark_as_found(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
     page.goto(base_url)
-    expect(page.get_by_text("Rattata", exact=True).first).to_be_visible()
+    expect(page.locator(f"[data-hunt-id='{hunt['id']}']")).to_be_visible()
 
     page.locator(f"[data-hunt-id='{hunt['id']}'] button[title='Mark as Found']").click()
     expect(
         page.get_by_placeholder("How did you find it? Any thoughts...")
     ).to_be_visible()
-    page.get_by_role("button", name="Mark as Found").last.click()
+    page.locator("[data-testid='confirm-mark-found']").click()
 
     page.get_by_text("History", exact=True).click()
-    expect(page.get_by_text("Rattata", exact=True).first).to_be_visible()
+    expect(page.locator(f"[data-hunt-id='{hunt['id']}']")).to_be_visible()
 
     page.request.delete(f"{base_url}/api/hunts/{hunt['id']}")
 
