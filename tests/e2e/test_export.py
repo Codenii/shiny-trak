@@ -116,8 +116,8 @@ def test_export_modal_opens(page: Page, base_url: str):
     page.goto(base_url)
     page.get_by_role("button", name="Export").click()
     expect(page.get_by_text("Export Hunts")).to_be_visible()
-    expect(page.locator("input[name='export_scope']").first).to_be_visible()
-    expect(page.locator("input[name='export_format']").first).to_be_visible()
+    expect(page.locator("input[name='export_scope'][value='all']")).to_be_visible()
+    expect(page.locator("input[name='export_format'][value='json']")).to_be_visible()
 
 
 def test_export_toast_appears(page: Page, base_url: str):
