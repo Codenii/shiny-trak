@@ -191,6 +191,8 @@ def update_hunt(hunt_id):
         "count",
         "game",
         "notes",
+        "startDate",
+        "endDate",
     }
     for k in allowed:
         if k in data:
@@ -237,6 +239,14 @@ def update_hunt(hunt_id):
                 hunt[k] = data[k]
             elif k in ("hotkey", "hotkeyDecrement"):
                 hunt[k] = data[k] or None
+            elif k in ("startDate", "endDate"):
+                if data[k] is not None:
+                    try:
+                        hunt[k] = float(data[k])
+                    except (ValueError, TypeError):
+                        return jsonify({"error": f"{k} must be a number or null"}), 400
+                else:
+                    hunt[k] = None
 
     save_hunts(hunts)
     broadcast(hunts, load_overlays())

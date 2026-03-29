@@ -15,7 +15,16 @@ function app() {
     markFoundNotes: "",
     showExport: false,
     acHighlight: -1,
-    newHunt: { name: "", game: "", error: "", loading: false, overlayIds: [], newOverlayName: '', showNewOverlay: false, showOverlayPicker: false },
+    newHunt: {
+      name: "",
+      game: "",
+      error: "",
+      loading: false,
+      overlayIds: [],
+      newOverlayName: "",
+      showNewOverlay: false,
+      showOverlayPicker: false,
+    },
     capture: { huntId: null, field: null },
     settings: { close_behavior: "ask", mark_found_behavior: "ask" },
     showCloseDialog: false,
@@ -26,6 +35,8 @@ function app() {
     exportMessage: "",
     overlaySubTab: "hunt",
     milestoneAlert: null,
+    detailHunt: null,
+    detailFromTab: "hunts",
     _milestoneTimer: null,
     _captureListener: null,
 
@@ -53,7 +64,14 @@ function app() {
       const es = new EventSource("/events");
       es.onmessage = (e) => {
         const data = JSON.parse(e.data);
-        if (data.hunts) this.hunts = data.hunts;
+        if (data.hunts) {
+          this.hunts = data.hunts;
+          if (this.detailHunt) {
+            const updated = data.hunts.find((h) => h.id === this.detailHunt.id);
+            if (updated) this.detailHunt = updated;
+            else this.detailHunt = null;
+          }
+        }
         if (data.overlays) this.overlays = data.overlays;
       };
       es.addEventListener("milestone", (e) => {
@@ -68,6 +86,67 @@ function app() {
         es.close();
         setTimeout(() => this.connect(), 3000);
       };
+    },
+
+    switchTab(tab) {
+      this.activeTab = tab;
+      this.detailHunt = null;
+    },
+
+    openDetail(hunt) {
+      this.detailFromTab = this.activeTab;
+      this.detailHunt = hunt;
+    },
+
+    closeDetail() {
+      this.detailHunt = null;
+    },
+
+    tsToDateInput(ts) {
+      if (!ts) return "";
+      const d = new Date(ts * 1000);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    },
+
+    huntDuration(hunt) {
+      if (!hunt || !hunt.startDate) return "";
+      const startMs = hunt.startDate * 1000;
+      const endMs = hunt.endDate ? hunt.endDate * 1000 : Date.now();
+      const days = Math.floor((endMs - startMs) / 86400000);
+      if (days === 0) return "Today";
+      return days === 1 ? "1 day" : `${days} days`;
+    },
+
+    async updateHuntDate(id, field, value) {
+      const ts = value ? new Date(value + "T00:00:00").getTime() / 1000 : null;
+      const r = await fetch(`/api/hunts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: ts }),
+      });
+      if (r.ok) {
+        const updated = await r.json();
+        const i = this.hunts.findIndex((h) => h.id === id);
+        if (i === -1) this.hunts[i] = updated;
+        if (this.detailHunt?.id === id) this.detailHunt = updated;
+      }
+    },
+
+    async updateNotes(id, value) {
+      const r = await fetch(`/api/hunts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: value || null }),
+      });
+      if (r.ok) {
+        const updated = await r.json();
+        const i = this.hunts.findIndex((h) => h.id === id);
+        if (i !== -1) this.hunts[i] = updated;
+        if (this.detailHunt?.id === id) this.detailHunt = updated;
+      }
     },
 
     // Autocomplete
@@ -104,24 +183,24 @@ function app() {
 
     // Hunt operations
     async addHunt() {
-      const name = this.newHunt.name.trim()
+      const name = this.newHunt.name.trim();
       if (!name) return;
 
       this.newHunt.loading = true;
-      this.newHunt.error = '';
+      this.newHunt.error = "";
 
       try {
-        const pokemon = await fetch(`/api/pokemon/${encodeURIComponent(name)}`).then(
-          (r) => r.json(),
-        );
+        const pokemon = await fetch(
+          `/api/pokemon/${encodeURIComponent(name)}`,
+        ).then((r) => r.json());
         if (pokemon.error) {
           this.newHunt.error = pokemon.error;
           return;
         }
 
-        const hunt = await fetch('/api/hunts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const hunt = await fetch("/api/hunts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             pokemon: pokemon.pokemon,
             displayName: pokemon.displayName,
@@ -134,19 +213,19 @@ function app() {
           const overlay = this.overlays.find((o) => o.id === overlayId);
           if (!overlay) continue;
           await fetch(`/api/overlays/${overlayId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               hunts: [...overlay.hunts, { huntId: hunt.id, visible: true }],
             }),
           });
         }
-        this.newHunt.name = '';
+        this.newHunt.name = "";
         this.newHunt.overlayIds = [];
         this.newHunt.showOverlayPicker = false;
         this.acOptions = [];
       } catch {
-        this.newHunt.error = 'Failed to add hunt';
+        this.newHunt.error = "Failed to add hunt";
       } finally {
         this.newHunt.loading = false;
       }
@@ -360,9 +439,9 @@ function app() {
     },
 
     async exportHunts(scope, fmt) {
-      const result = await fetch(`/api/export?scope=${scope}&format=${fmt}`).then((r) =>
-        r.json(),
-      );
+      const result = await fetch(
+        `/api/export?scope=${scope}&format=${fmt}`,
+      ).then((r) => r.json());
       if (result.ok) {
         this.exportMessage = `Saved to Downloads/${result.filename}`;
         setTimeout(() => (this.exportMessage = ""), 4000);
@@ -387,33 +466,42 @@ function app() {
     async addOverlayFromForm() {
       const name = this.newHunt.newOverlayName.trim();
       if (!name) return;
-      const overlay = await fetch('/api/overlays', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type: 'hunt' }),
+      const overlay = await fetch("/api/overlays", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, type: "hunt" }),
       }).then((r) => r.json());
       this.overlays = [...this.overlays, overlay];
       this.newHunt.overlayIds = [...this.newHunt.overlayIds, overlay.id];
-      this.newHunt.newOverlayName = '';
+      this.newHunt.newOverlayName = "";
       this.newHunt.showNewOverlay = false;
     },
 
     newHuntOverlayLabel() {
-      if (this.newHunt.overlayIds.length === 0) return 'No overlay';
+      if (this.newHunt.overlayIds.length === 0) return "No overlay";
       if (this.newHunt.overlayIds.length === 1) {
-        const overlay = this.overlays.find((o) => o.id === this.newHunt.overlayIds[0]);
-        return overlay ? overlay.name : '1 overlay';
+        const overlay = this.overlays.find(
+          (o) => o.id === this.newHunt.overlayIds[0],
+        );
+        return overlay ? overlay.name : "1 overlay";
       }
       return `${this.newHunt.overlayIds.length} overlays`;
     },
 
     huntOverlaysAllSelected() {
-      const huntOverlays = this.overlays.filter((o) => (o.type || 'hunt') === 'hunt');
-      return huntOverlays.length > 0 && huntOverlays.every((o) => this.newHunt.overlayIds.includes(o.id));
+      const huntOverlays = this.overlays.filter(
+        (o) => (o.type || "hunt") === "hunt",
+      );
+      return (
+        huntOverlays.length > 0 &&
+        huntOverlays.every((o) => this.newHunt.overlayIds.includes(o.id))
+      );
     },
 
     toggleSelectAllOverlays() {
-      const huntOverlays = this.overlays.filter((o) => (o.type || 'hunt') === 'hunt');
+      const huntOverlays = this.overlays.filter(
+        (o) => (o.type || "hunt") === "hunt",
+      );
       if (this.huntOverlaysAllSelected()) {
         this.newHunt.overlayIds = [];
       } else {

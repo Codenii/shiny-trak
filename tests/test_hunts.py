@@ -221,3 +221,28 @@ def test_update_hunt_invalid_notes_type(client, hunt):
     r = client.put(f"/api/hunts/{hunt['id']}", json={"notes": 123})
     assert r.status_code == 400
     assert r.get_json()["error"] == "notes must be a string or null"
+
+
+def test_update_hunt_start_date(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"startDate": 1700000000.0})
+    assert r.status_code == 200
+    assert r.get_json()["startDate"] == 1700000000.0
+
+
+def test_update_hunt_end_date(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"endDate": 1700086400.0})
+    assert r.status_code == 200
+    assert r.get_json()["endDate"] == 1700086400.0
+
+
+def test_update_hunt_end_date_null(client, hunt):
+    client.put(f"/api/hunts/{hunt['id']}", json={"endDate": 1700086400.0})
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"endDate": None})
+    assert r.status_code == 200
+    assert r.get_json()["endDate"] is None
+
+
+def test_update_hunt_invalid_start_date(client, hunt):
+    r = client.put(f"/api/hunts/{hunt['id']}", json={"startDate": "not-a-number"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "startDate must be a number or null"

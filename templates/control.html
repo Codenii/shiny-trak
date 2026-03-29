@@ -1,25 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shiny Trak</title>
-    <link rel="stylesheet" href="/static/tailwind.css">
-    <link rel="stylesheet" href="/static/control.css">
-</head>
-<body class="bg-bg text-text font-sans h-screen overflow-hidden flex" x-data="app()">
-    <div class="flex h-full w-full">
-        {% include 'partials/_sidebar.html' %}
-        <main class="flex-1 flex flex-col overflow-hidden">
-            {% include 'partials/_add_hunt_form.html' %}
-            {% include 'partials/_hunts_tab.html' %}
-            {% include 'partials/_history_tab.html' %}
-            {% include 'partials/_overlays_tab.html' %}
-            {% include 'partials/_stats_tab.html' %}
-        </main>
-    </div>
-    {% include 'partials/_modals.html' %}
-    <script src="/static/app.js"></script>
-    <script src="/static/alpine.min.js" defer></script>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Shiny Trak</title>
+        <link rel="stylesheet" href="/static/tailwind.css" />
+        <link rel="stylesheet" href="/static/control.css" />
+    </head>
+    <body
+        class="bg-bg text-text font-sans h-screen overflow-hidden flex"
+        x-data="app()"
+    >
+        <div class="flex h-full w-full">
+            {% include 'partials/_sidebar.html' %}
+            <main class="flex-1 flex flex-col overflow-hidden">
+                <div
+                    x-show="!detailHunt"
+                    class="flex-1 flex flex-col overflow-hidden"
+                >
+                    {% include 'partials/_add_hunt_form.html' %} {% include
+                    'partials/_hunts_tab.html' %} {% include
+                    'partials/_history_tab.html' %} {% include
+                    'partials/_overlays_tab.html' %} {% include
+                    'partials/_stats_tab.html' %}
+                </div>
+                {% include 'partials/_hunt_detail.html' %}
+            </main>
+        </div>
+        {% include 'partials/_modals.html' %}
+        <script src="/static/app.js"></script>
+        <script src="/static/alpine.min.js" defer></script>
+    </body>
 </html>

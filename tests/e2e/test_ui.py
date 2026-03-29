@@ -23,7 +23,7 @@ def test_control_panel_loads(page: Page, base_url: str):
     page.goto(base_url)
     expect(page).to_have_title("Shiny Trak")
     expect(page.get_by_placeholder("Search Pokemon...")).to_be_visible()
-    expect(page.get_by_text("Hunts", exact=True)).to_be_visible()
+    expect(page.locator("aside").get_by_text("Hunts", exact=True)).to_be_visible()
     expect(page.get_by_text("History", exact=True)).to_be_visible()
 
 

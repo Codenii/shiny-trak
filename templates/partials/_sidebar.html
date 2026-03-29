@@ -13,7 +13,7 @@
     <nav class="flex-1 px-3 py-3 flex flex-col">
         <div class="space-y-0.5">
             <div
-                @click="activeTab = 'hunts'"
+                @click="switchTab('hunts')"
                 :class="activeTab === 'hunts' ? 'bg-primary/20 border-l-2 border-primary cursor-default' : 'border-l-2 border-transparent hover:bg-primary/10 cursor-pointer'"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-150"
             >
@@ -23,7 +23,7 @@
                 <span class="text-sm font-medium" :class="activeTab === 'hunts' ? 'text-text' : 'text-text-muted'">Hunts</span>
             </div>
             <div
-                @click="activeTab = 'history'"
+                @click="switchTab('history')"
                 :class="activeTab === 'history' ? 'bg-primary/20 border-l-2 border-primary' : 'border-l-2 border-transparent hover:bg-primary/10'"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150"
             >
@@ -33,7 +33,7 @@
                 <span class="text-sm font-medium" :class="activeTab === 'history' ? 'text-text' : 'text-text-muted'">History</span>
             </div>
             <div
-                @click="activeTab = 'overlays'"
+                @click="switchTab('overlays')"
                 :class="activeTab === 'overlays' ? 'bg-primary/20 border-l-2 border-primary' : 'border-l-2 border-transparent hover:bg-primary/10'"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150"
             >
@@ -45,7 +45,7 @@
         </div>
         <div class="mt-auto pt-0.5">
             <div
-                @click="activeTab = 'stats'"
+                @click="switchTab('stats')"
                 :class="activeTab === 'stats' ? 'bg-primary/20 border-l-2 border-primary' : 'border-l-2 border-transparent hover:bg-primary/10'"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors duration-150"
             >
