@@ -40,3 +40,23 @@ def test_update_milestone_alerts(client):
     r = client.put("/api/settings", json={"milestone_alerts": False})
     assert r.status_code == 200
     assert r.get_json()["milestone_alerts"] is False
+
+
+def test_update_settings_invalid_close_behavior(client):
+    r = client.put("/api/settings", json={"close_behavior": "explode"})
+    assert r.status_code == 400
+    assert (
+        r.get_json()["error"] == "close_behavior must be 'ask', 'minimize', or 'quit'"
+    )
+
+
+def test_update_settings_invalid_mark_found_behavior(client):
+    r = client.put("/api/settings", json={"mark_found_behavior": "always"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "mark_found_behavior must be 'ask' or 'never'"
+
+
+def test_update_settings_invalid_milestone_alerts(client):
+    r = client.put("/api/settings", json={"milestone_alerts": "yes"})
+    assert r.status_code == 400
+    assert r.get_json()["error"] == "milestone_alerts must be a boolean"

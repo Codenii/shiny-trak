@@ -10,7 +10,7 @@
     </div>
     <!-- Hunt Cards -->
     <template x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)" :key="hunt.id">
-        <div class="bg-bg-card rounded-xl p-4 flex items-center gap-4 transition-colors duration-150">
+        <div :data-hunt-id="hunt.id" class="bg-bg-card rounded-xl p-4 flex items-center gap-4 transition-colors duration-150">
             <!-- Sprite -->
             <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center">
                 <template x-if="hunt.spriteUrl">
@@ -55,13 +55,14 @@
                     <template x-if="!(capture.huntId === hunt.id && capture.field === 'hotkey')">
                         <div class="flex items-center gap-1">
                             <template x-if="hunt.hotkey">
-                                <span class="px-1.5 py-0.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkey)"></span>
+                                <span data-testid="badge-hotkey" class="px-1.5 py-0.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkey)"></span>
                             </template>
                             <template x-if="hunt.hotkey">
                                 <button @click="clearHotkey(hunt.id, 'hotkey')" title="Clear increment hotkey" class="text-text-muted/50 hover:text-danger transition-colors text-xs">✕</button>
                             </template>
                             <button
                                 @click="startCapture(hunt.id, 'hotkey')"
+                                title="Edit increment hotkey"
                                 class="px-2 py-0.5 bg-bg-surface border border-primary/20 hover:border-primary rounded text-xs text-text-muted hover:text-text transition-colors duration-150"
                                 x-text="hunt.hotkey ? 'Change' : 'Set'"
                             ></button>
@@ -80,13 +81,14 @@
                     <template x-if="!(capture.huntId === hunt.id && capture.field === 'hotkeyDecrement')">
                         <div class="flex items-center gap-1">
                             <template x-if="hunt.hotkeyDecrement">
-                                <span class="px-1.5 py-0.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkeyDecrement)"></span>
+                                <span data-testid="badge-hotkey-decrement" class="px-1.5 py-0.5 bg-gold/10 border border-gold/30 rounded text-xs text-gold font-mono" x-text="formatHotkey(hunt.hotkeyDecrement)"></span>
                             </template>
                             <template x-if="hunt.hotkeyDecrement">
                                 <button @click="clearHotkey(hunt.id, 'hotkeyDecrement')" title="Clear decrement hotkey" class="text-text-muted/50 hover:text-danger transition-colors text-xs">✕</button>
                             </template>
                             <button
                                 @click="startCapture(hunt.id, 'hotkeyDecrement')"
+                                title="Edit decrement hotkey"
                                 class="px-2 py-0.5 bg-bg-surface border border-primary/20 hover:border-primary rounded text-xs text-text-muted hover:text-text transition-colors duration-150"
                                 x-text="hunt.hotkeyDecrement ? 'Change' : 'Set'"
                             ></button>
@@ -98,16 +100,19 @@
             <div class="flex-shrink-0 flex items-center gap-1.5">
                 <button
                     @click="decrement(hunt.id)"
+                    title="Decrement"
                     class="w-7 h-7 flex items-center justify-center rounded-lg bg-bg-surface border border-primary/20 hover:border-primary hover:bg-primary/10 text-text-muted hover:text-text transition-colors duration-150 text-lg leading-none"
                 >-</button>
                 <input
                     type="number"
                     :value="hunt.count"
                     @change="setCount(hunt.id, $event.target.value)"
+                    data-testid="count-input"
                     class="w-20 text-center bg-transparent text-gold font-bold text-lg tabular-nums focus:outline-none focus:bg-bg-surface rounded px-1"
                 />
                 <button
                     @click="increment(hunt.id)"
+                    title="Increment"
                     class="w-7 h-7 flex items-center justify-center rounded-lg bg-bg-surface border border-primary/20 hover:border-primary hover:bg-primary/10 text-text-muted hover:text-text transition-colors duration-150 text-lg leading-none"
                 >+</button>
             </div>

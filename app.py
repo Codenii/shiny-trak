@@ -9,17 +9,16 @@ import urllib.request
 import uuid
 from queue import Empty, Queue
 
-from waitress import serve
-
 from flask import (
     Flask,
     Response,
     jsonify,
+    redirect,
     render_template,
     request,
-    redirect,
     stream_with_context,
 )
+from waitress import serve
 
 import store
 import tray
@@ -27,19 +26,18 @@ from hotkeys import PYNPUT_AVAILABLE, rebuild_hotkeys
 from store import (
     GAME_POKEDEX_MAP,
     GAMES_CACHE_DIR,
+    broadcast,
+    broadcast_milestone,
     load_hunts,
     load_overlays,
     load_settings,
     save_hunts,
     save_overlays,
     save_settings,
-    broadcast,
-    broadcast_milestone,
     sse_clients,
     sse_lock,
 )
 from tray import WEBVIEW_AVAILABLE, _on_closing, _setup_tray, _wait_for_server
-
 
 if getattr(sys, "frozen", False):
     _TEMPLATE_DIR = os.path.join(sys._MEIPASS, "templates")
@@ -61,7 +59,7 @@ def control_panel():
 
 @app.route("/overlay")
 def overlay_default():
-    return redirect("/overlay/main")
+    return "", 404
 
 
 @app.route("/overlay/<name>")
@@ -143,10 +141,18 @@ def get_hunts():
 def add_hunt():
     data = request.json or {}
 
+    pokemon = data.get("pokemon", "").strip()
+    if not pokemon:
+        return jsonify({"error": "pokemon required"}), 400
+
+    display_name = data.get("displayName", "").strip()
+    if not display_name:
+        return jsonify({"error": "displayName required"}), 400
+
     hunt = {
         "id": str(uuid.uuid4()),
-        "pokemon": data.get("pokemon", ""),
-        "displayName": data.get("displayName", "Unknown"),
+        "pokemon": pokemon,
+        "displayName": display_name,
         "spriteUrl": data.get("spriteUrl") or None,
         "count": 0,
         "encounterRate": data.get("encounterRate") or None,
@@ -189,11 +195,49 @@ def update_hunt(hunt_id):
     for k in allowed:
         if k in data:
             if k == "count":
-                hunt["count"] = max(0, int(data[k]))
+                try:
+                    hunt["count"] = max(0, int(data[k]))
+                except (ValueError, TypeError):
+                    return jsonify({"error": "count must be a number"}), 400
+            elif k == "encounterRate":
+                if data[k] is not None:
+                    try:
+                        val = int(data[k])
+                    except (ValueError, TypeError):
+                        return (
+                            jsonify(
+                                {
+                                    "error": "encounterRate must be a positive integer or null"
+                                }
+                            ),
+                            400,
+                        )
+                    if val <= 0:
+                        return (
+                            jsonify(
+                                {
+                                    "error": "encounterRate must be a positive integer or null"
+                                }
+                            ),
+                            400,
+                        )
+                    hunt[k] = val
+                else:
+                    hunt[k] = None
+            elif k == "displayName":
+                if not isinstance(data[k], str) or not data[k].strip():
+                    return (
+                        jsonify({"error": "displayName must be a non-empty string"}),
+                        400,
+                    )
+                hunt[k] = data[k]
+            elif k in ("game", "notes", "spriteUrl"):
+                if data[k] is not None and not isinstance(data[k], str):
+                    return jsonify({"error": f"{k} must be a string or null"}), 400
+                hunt[k] = data[k]
             elif k in ("hotkey", "hotkeyDecrement"):
                 hunt[k] = data[k] or None
-            else:
-                hunt[k] = data[k]
+
     save_hunts(hunts)
     broadcast(hunts, load_overlays())
     rebuild_hotkeys()
@@ -457,9 +501,29 @@ def get_settings():
 def update_settings():
     data = request.json or {}
     settings = load_settings()
-    for k in {"close_behavior", "mark_found_behavior", "milestone_alerts"}:
-        if k in data:
-            settings[k] = data[k]
+
+    if "close_behavior" in data:
+        if data["close_behavior"] not in ("ask", "minimize", "quit"):
+            return (
+                jsonify(
+                    {"error": "close_behavior must be 'ask', 'minimize', or 'quit'"}
+                ),
+                400,
+            )
+        settings["close_behavior"] = data["close_behavior"]
+
+    if "mark_found_behavior" in data:
+        if data["mark_found_behavior"] not in ("ask", "never"):
+            return (
+                jsonify({"error": "mark_found_behavior must be 'ask' or 'never'"}),
+                400,
+            )
+        settings["mark_found_behavior"] = data["mark_found_behavior"]
+
+    if "milestone_alerts" in data:
+        if not isinstance(data["milestone_alerts"], bool):
+            return jsonify({"error": "milestone_alerts must be a boolean"}), 400
+        settings["milestone_alerts"] = data["milestone_alerts"]
     save_settings(settings)
     return jsonify(settings)
 
@@ -506,21 +570,6 @@ def migrate_overlays() -> None:
     if changed:
         save_hunts(hunts)
         save_overlays(overlays)
-    if overlays:
-        return
-    overlay = {
-        "id": str(uuid.uuid4()),
-        "name": "main",
-        "type": "hunt",
-        "elements": {
-            "sprite": True,
-            "name": True,
-            "count": True,
-            "odds": False,
-        },
-        "hunts": [{"huntId": h["id"], "visible": True} for h in hunts],
-    }
-    save_overlays([overlay])
 
 
 @app.get("/api/overlays")
@@ -546,11 +595,7 @@ def add_overlay():
             "name": name,
             "type": "hunt",
             "elements": {"sprite": True, "name": True, "count": True, "odds": False},
-            "hunts": [
-                {"huntId": h["id"], "visible": True}
-                for h in hunts
-                if h.get("status", "active") == "active"
-            ],
+            "hunts": [],
         }
     else:
         overlay = {
@@ -578,14 +623,69 @@ def update_overlay(overlay_id):
     if overlay is None:
         return jsonify({"error": "not found"}), 404
     data = request.json or {}
+
     if "name" in data:
-        overlay["name"] = data["name"].strip()
+        name = data["name"].strip()
+        if not name:
+            return jsonify({"error": "name is required"}), 400
+        overlay["name"] = name
+
     if "hunts" in data:
-        overlay["hunts"] = data["hunts"]
+        hunt_data = data["hunts"]
+        if not isinstance(hunt_data, list):
+            return jsonify({"error": "hunts must be a list"}), 400
+        for entry in hunt_data:
+            if not isinstance(entry.get("huntId"), str) or not isinstance(
+                entry.get("visible"), bool
+            ):
+                return (
+                    jsonify(
+                        {
+                            "error": "each hunt entry must have huntId (string) and visible (boolean)"
+                        }
+                    ),
+                    400,
+                )
+        overlay["hunts"] = hunt_data
+
     if "elements" in data:
-        overlay["elements"] = data["elements"]
+        elements = data["elements"]
+        if not isinstance(elements, dict):
+            return jsonify({"error": "elements must be an object"}), 400
+        ov_type = overlay.get("type", "hunt")
+        if ov_type == "hunt":
+            hunt_keys = {"sprite", "name", "count", "odds"}
+            if set(elements.keys()) != hunt_keys:
+                return (
+                    jsonify(
+                        {
+                            "error": f"hunt overlay elements must contain exactly: {sorted(hunt_keys)}"
+                        }
+                    ),
+                    400,
+                )
+            if not all(isinstance(elements[k], bool) for k in hunt_keys):
+                return (
+                    jsonify({"error": "hunt overlay elements must all be booleans"}),
+                    400,
+                )
+        elif ov_type == "stats":
+            if not isinstance(elements.get("totalCompleted"), bool):
+                return jsonify({"error": "totalCompleted must be a boolean"}), 400
+            if elements.get("breakdown") not in ("completed", "active", None):
+                return (
+                    jsonify(
+                        {"error": "breakdown must be 'completed', 'active', or null"}
+                    ),
+                    400,
+                )
+        overlay["elements"] = elements
+
     if "game" in data:
+        if data["game"] is not None and not isinstance(data["game"], str):
+            return jsonify({"error": "game must be a string or null"}), 400
         overlay["game"] = data["game"]
+
     save_overlays(overlays)
     broadcast(load_hunts(), overlays)
     return jsonify(overlay)

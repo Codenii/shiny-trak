@@ -4,11 +4,11 @@
         <div class="text-xs font-semibold uppercase tracking-widest text-text-muted/50 mb-4">Overall</div>
         <div class="grid grid-cols-2 gap-4">
             <div class="bg-bg-surface rounded-lg p-4 text-center">
-                <div class="text-3xl font-bold text-gold" x-text="hunts.filter(h => h.status === 'completed').length"></div>
+                <div data-testid="completed-count" class="text-3xl font-bold text-gold" x-text="hunts.filter(h => h.status === 'completed').length"></div>
                 <div class="text-xs text-text-muted mt-1">Completed</div>
             </div>
             <div class="bg-bg-surface rounded-lg p-4 text-center">
-                <div class="text-3xl font-bold text-primary-light" x-text="hunts.filter(h => h.status === 'active' || !h.status).length"></div>
+                <div data-testid="active-count" class="text-3xl font-bold text-primary-light" x-text="hunts.filter(h => h.status === 'active' || !h.status).length"></div>
                 <div class="text-xs text-text-muted mt-1">Active</div>
             </div>
         </div>

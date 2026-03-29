@@ -26,7 +26,7 @@ def test_reset_count(page: Page, base_url: str):
     page.request.post(f"{base_url}/api/hunts/{hunt['id']}/increment")
 
     page.goto(base_url)
-    page.locator("button[title='Reset count']").first.click()
+    page.locator(f"[data-hunt-id='{hunt['id']}'] button[title='Reset count']").click()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
@@ -39,7 +39,9 @@ def test_manual_count_entry(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
 
     page.goto(base_url)
-    count_input = page.locator("input.text-gold").first
+    count_input = page.locator(
+        f"[data-hunt-id='{hunt['id']}'] [data-testid='count-input']"
+    )
     count_input.fill("42")
     with page.expect_response(
         lambda r: f"/api/hunts/{hunt['id']}" in r.url and r.request.method == "PUT"
@@ -57,7 +59,7 @@ def test_count_cannot_go_below_zero(page: Page, base_url: str):
     hunt = _create_hunt(page, base_url)
 
     page.goto(base_url)
-    page.get_by_role("button", name="-", exact=True).first.click()
+    page.locator(f"[data-hunt-id='{hunt['id']}'] button[title='Decrement']").click()
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])
@@ -77,7 +79,9 @@ def test_count_persistence(page: Page, base_url: str):
 
     page.goto(base_url)
     page.reload()
-    expect(page.locator("input.text-gold").first).to_have_value("77")
+    expect(
+        page.locator(f"[data-hunt-id='{hunt['id']}'] [data-testid='count-input']")
+    ).to_have_value("77")
 
     resp = page.request.get(f"{base_url}/api/hunts")
     h = next(h for h in resp.json() if h["id"] == hunt["id"])

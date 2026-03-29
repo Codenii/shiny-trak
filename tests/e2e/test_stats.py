@@ -125,9 +125,11 @@ def test_stats_ui(page: Page, base_url: str):
     page.get_by_text("Statistics", exact=True).click()
 
     # Overall counts
-    expect(page.locator("#stats-overall .text-3xl.text-gold").first).to_have_text("2")
     expect(
-        page.locator("#stats-overall .text-3xl.text-primary-light").first
+        page.locator("#stats-overall [data-testid='completed-count']").first
+    ).to_have_text("2")
+    expect(
+        page.locator("#stats-overall [data-testid='active-count']").first
     ).to_have_text("2")
 
     # By Game - Red / Blue

@@ -2,25 +2,37 @@
 <div
     x-show="showCloseDialog"
     x-transition.opacity
-    style="z-index: 60;"
+    style="z-index: 60"
     class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
 >
-    <div class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-80 shadow-2xl">
-        <div class="text-base font-semibold text-text mb-1">Close Shiny Trak?</div>
-        <div class="text-sm text-text-muted mb-5">What would you like to do?</div>
+    <div
+        class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-80 shadow-2xl"
+    >
+        <div class="text-base font-semibold text-text mb-1">
+            Close Shiny Trak?
+        </div>
+        <div class="text-sm text-text-muted mb-5">
+            What would you like to do?
+        </div>
         <div class="flex flex-col gap-2">
             <button
                 @click="confirmClose('minimize')"
                 class="w-full px-4 py-2.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text text-left transition-colors duration-150"
-            >Minimize to tray</button>
+            >
+                Minimize to tray
+            </button>
             <button
                 @click="confirmClose('quit')"
                 class="w-full px-4 py-2.5 bg-danger/10 hover:bg-danger/20 border border-danger/20 rounded-lg text-sm font-medium text-danger text-left transition-colors duration-150"
-            >Quit Shiny Trak</button>
+            >
+                Quit Shiny Trak
+            </button>
             <button
                 @click="confirmClose('cancel')"
                 class="w-full px-4 py-2.5 hover:bg-primary/10 rounded-lg text-sm font-medium text-text-muted hover:text-text-muted text-left transition-colors duration-150"
-            >Cancel</button>
+            >
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -31,21 +43,45 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     @click.self="showSettings = false"
 >
-    <div class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl">
+    <div
+        class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl"
+    >
         <div class="flex items-center justify-between mb-5">
             <div class="text-base font-semibold text-text">Settings</div>
-            <button @click="showSettings = false" class="text-text-muted/50 hover:text-text-muted transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <button
+                @click="showSettings = false"
+                class="text-text-muted/50 hover:text-text-muted transition-colors"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
                 </svg>
             </button>
         </div>
         <!-- Close Behavior -->
         <div>
-            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">When closing the window</div>
+            <div
+                class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3"
+            >
+                When closing the window
+            </div>
             <div class="space-y-1.5">
-                <template x-for="opt in [{value:'ask',label:'Ask every time'},{value:'minimize',label:'Minimize to tray'},{value:'quit',label:'Quit'}]" :key="opt.value">
-                    <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150">
+                <template
+                    x-for="opt in [{value:'ask',label:'Ask every time'},{value:'minimize',label:'Minimize to tray'},{value:'quit',label:'Quit'}]"
+                    :key="opt.value"
+                >
+                    <label
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150"
+                    >
                         <input
                             type="radio"
                             name="close_behavior"
@@ -54,17 +90,29 @@
                             @change="saveSettings()"
                             class="accent-primary"
                         />
-                        <span class="text-sm text-text-muted" x-text="opt.label"></span>
+                        <span
+                            class="text-sm text-text-muted"
+                            x-text="opt.label"
+                        ></span>
                     </label>
                 </template>
             </div>
         </div>
         <!-- Mark Found Behavior -->
         <div class="mt-5 pt-5 border-t border-primary/10">
-            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">When marking a hunt as found</div>
+            <div
+                class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3"
+            >
+                When marking a hunt as found
+            </div>
             <div class="space-y-1.5">
-                <template x-for="opt in [{value:'ask',label:'Ask for notes'},{value:'never',label:'Complete immediately'}]" :key="opt.value">
-                    <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150">
+                <template
+                    x-for="opt in [{value:'ask',label:'Ask for notes'},{value:'never',label:'Complete immediately'}]"
+                    :key="opt.value"
+                >
+                    <label
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150"
+                    >
                         <input
                             type="radio"
                             name="mark_found_behavior"
@@ -73,22 +121,33 @@
                             @change="saveSettings()"
                             class="accent-primary"
                         />
-                        <span class="text-sm text-text-muted" x-text="opt.label"></span>
+                        <span
+                            class="text-sm text-text-muted"
+                            x-text="opt.label"
+                        ></span>
                     </label>
                 </template>
             </div>
         </div>
         <!-- Milestone Alerts -->
         <div class="mt-5 pt-5 border-t border-primary/10">
-            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Milestone Alerts</div>
-            <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150">
+            <div
+                class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3"
+            >
+                Milestone Alerts
+            </div>
+            <label
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150"
+            >
                 <input
                     type="checkbox"
                     x-model="settings.milestone_alerts"
                     @change="saveSettings()"
                     class="accent-primary"
                 />
-                <span class="text-sm text-text-muted">Show alerts when a hunt reaches 1x, 2x, 3x odds</span>
+                <span class="text-sm text-text-muted"
+                    >Show alerts when a hunt reaches 1x, 2x, 3x odds</span
+                >
             </label>
         </div>
     </div>
@@ -100,37 +159,69 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     @click.self="showMarkFound = false"
 >
-    <div class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl">
+    <div
+        class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl"
+    >
         <div class="flex items-center justify-between mb-5">
             <div>
-                <div class="text-base font-semibold text-text">Mark as Found</div>
-                <div class="text-sm text-text-muted mt-0.5" x-text="markFoundHunt ? markFoundHunt.displayName : ''"></div>
+                <div class="text-base font-semibold text-text">
+                    Mark as Found
+                </div>
+                <div
+                    class="text-sm text-text-muted mt-0.5"
+                    x-text="markFoundHunt ? markFoundHunt.displayName : ''"
+                ></div>
             </div>
-            <button @click="showMarkFound = false" class="text-text-muted/50 hover:text-text-muted transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <button
+                @click="showMarkFound = false"
+                class="text-text-muted/50 hover:text-text-muted transition-colors"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
                 </svg>
             </button>
         </div>
         <!-- Notes -->
         <div class="mb-5">
-            <label class="block text-xs font-medium text-text-muted uppercase tracking-wider mb-1.5">Notes <span class="text-text-muted/50 normal-case tracking-normal">(optional)</span></label>
+            <label
+                class="block text-xs font-medium text-text-muted uppercase tracking-wider mb-1.5"
+                >Notes
+                <span class="text-text-muted/50 normal-case tracking-normal"
+                    >(optional)</span
+                ></label
+            >
             <textarea
                 x-model="markFoundNotes"
                 placeholder="How did you find it? Any thoughts..."
                 rows="3"
-                class="w-full bg-bg-card border border-primary/20 rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/30 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors duration-150 resize-none"></textarea>
+                class="w-full bg-bg-card border border-primary/20 rounded-lg px-3 py-2 text-sm text-text placeholder-text-muted/30 focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-colors duration-150 resize-none"
+            ></textarea>
         </div>
         <!-- Actions -->
         <div class="flex gap-2">
             <button
                 @click="confirmMarkFound()"
+                data-testid="confirm-mark-found"
                 class="flex-1 px-4 py-2.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150"
-            >Mark as Found</button>
+            >
+                Mark as Found
+            </button>
             <button
                 @click="showMarkFound = false"
                 class="px-4 py-2.5 hover:bg-primary/10 rounded-lg text-sm font-medium text-text-muted hover:text-text-muted transition-colors duration-150"
-            >Cancel</button>
+            >
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -141,35 +232,86 @@
     class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
     @click.self="showExport = false"
 >
-    <div class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl">
+    <div
+        class="bg-bg-surface border border-primary/20 rounded-2xl p-6 w-96 shadow-2xl"
+    >
         <div class="flex items-center justify-between mb-5">
             <div class="text-base font-semibold text-text">Export Hunts</div>
-            <button @click="showExport = false" class="text-text-muted/50 hover:text-text-muted transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <button
+                @click="showExport = false"
+                class="text-text-muted/50 hover:text-text-muted transition-colors"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
                 </svg>
             </button>
         </div>
         <!-- Scope -->
         <div class="mb-5">
-            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Include</div>
+            <div
+                class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3"
+            >
+                Include
+            </div>
             <div class="space-y-1.5">
-                <template x-for="opt in [{value:'all',label:'All hunts'},{value:'active',label:'Active hunts only'},{value:'completed',label:'Completed hunts only'}]" :key="opt.value">
-                    <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150">
-                        <input type="radio" name="export_scope" :value="opt.value" x-model="exportScope" class="accent-primary" />
-                        <span class="text-sm text-text-muted" x-text="opt.label"></span>
+                <template
+                    x-for="opt in [{value:'all',label:'All hunts'},{value:'active',label:'Active hunts only'},{value:'completed',label:'Completed hunts only'}]"
+                    :key="opt.value"
+                >
+                    <label
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150"
+                    >
+                        <input
+                            type="radio"
+                            name="export_scope"
+                            :value="opt.value"
+                            x-model="exportScope"
+                            class="accent-primary"
+                        />
+                        <span
+                            class="text-sm text-text-muted"
+                            x-text="opt.label"
+                        ></span>
                     </label>
                 </template>
             </div>
         </div>
         <!-- Format -->
         <div class="mb-5">
-            <div class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3">Format</div>
+            <div
+                class="text-xs font-medium text-text-muted uppercase tracking-wider mb-3"
+            >
+                Format
+            </div>
             <div class="space-y-1.5">
-                <template x-for="opt in [{value:'json',label:'JSON'},{value:'csv',label:'CSV'}]" :key="opt.value">
-                    <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150">
-                        <input type="radio" name="export_format" :value="opt.value" x-model="exportFormat" class="accent-primary" />
-                        <span class="text-sm text-text-muted" x-text="opt.label"></span>
+                <template
+                    x-for="opt in [{value:'json',label:'JSON'},{value:'csv',label:'CSV'}]"
+                    :key="opt.value"
+                >
+                    <label
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-primary/10 cursor-pointer transition-colors duration-150"
+                    >
+                        <input
+                            type="radio"
+                            name="export_format"
+                            :value="opt.value"
+                            x-model="exportFormat"
+                            class="accent-primary"
+                        />
+                        <span
+                            class="text-sm text-text-muted"
+                            x-text="opt.label"
+                        ></span>
                     </label>
                 </template>
             </div>
@@ -178,18 +320,30 @@
         <button
             @click="exportHunts(exportScope, exportFormat);"
             class="w-full px-4 py-2.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150"
-        >Download</button>
+        >
+            Download
+        </button>
     </div>
 </div>
 <!-- Toast Notification -->
 <div
     x-show="exportMessage"
     x-transition.opacity
-    style="z-index: 70;"
+    style="z-index: 70"
     class="fixed bottom-5 right-5 bg-bg-surface border border-primary/20 rounded-xl px-4 py-3 shadow-2xl flex items-center gap-3"
 >
-    <svg class="w-4 h-4 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    <svg
+        class="w-4 h-4 text-primary flex-shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+    >
+        <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+        />
     </svg>
     <span class="text-sm text-text-muted" x-text="exportMessage"></span>
 </div>
@@ -197,7 +351,7 @@
 <div
     x-show="milestoneAlert"
     x-transition.opacity
-    style="z-index: 70;"
+    style="z-index: 70"
     class="fixed top-5 left-1/2 -translate-x-1/2 bg-bg-surface border border-yellow-400/40 rounded-xl px-5 py-3 shadow-2xl flex items-center gap-3 pointer-events-none"
 >
     <span class="text-lg">✨</span>

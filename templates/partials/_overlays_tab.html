@@ -1,23 +1,31 @@
-<div x-show="activeTab === 'overlays'" class="flex-1 flex flex-col overflow-hidden">
+<div
+    x-show="activeTab === 'overlays'"
+    class="flex-1 flex flex-col overflow-hidden"
+>
     <!-- Sub-Tab Switcher -->
     <div class="px-6 pt-3 flex gap-1 border-b border-primary/10">
         <button
             @click="overlaySubTab = 'hunt'"
             :class="overlaySubTab === 'hunt' ? 'border-b-2 border-primary text-text' : 'text-text-muted hover:text-text'"
-            class="text-sm font-medium px-3 pb-2 transition-colors duration-150">
+            class="text-sm font-medium px-3 pb-2 transition-colors duration-150"
+        >
             Hunt Overlays
         </button>
         <button
             @click="overlaySubTab = 'stats'"
             :class="overlaySubTab === 'stats' ? 'border-b-2 border-primary text-text' : 'text-text-muted hover:text-text'"
-            class="text-sm font-medium px-3 pb-2 transition-colors duration-150">
+            class="text-sm font-medium px-3 pb-2 transition-colors duration-150"
+        >
             Stats Overlays
         </button>
     </div>
     <!-- New Overlay Header -->
     <div class="px-6 py-3 border-b border-primary/10 flex items-center gap-2">
         <div x-show="!showNewOverlay">
-            <button @click="showNewOverlay = true" class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150">
+            <button
+                @click="showNewOverlay = true"
+                class="flex items-center gap-2 px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150"
+            >
                 + New Overlay
             </button>
         </div>
@@ -28,81 +36,207 @@
                 @keydown.enter="addOverlay()"
                 @keydown.escape="showNewOverlay = false; newOverlayName = ''"
                 placeholder="Overlay name..."
+                data-testid="overlay-name-input"
                 class="bg-bg-card border border-primary/20 rounded-lg px-3 py-1.5 text-sm text-text placeholder-text-muted/30 focus:outline-none focus:border-primary/60 transition-colors duration-150"
             />
-            <button @click="addOverlay()" class="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150">Add</button>
-            <button @click="showNewOverlay = false; newOverlayName = ''" class="text-text-muted/50 hover:text-text-muted text-sm transition-colors">Cancel</button>
+            <button
+                @click="addOverlay()"
+                class="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-lg text-sm font-medium text-text transition-colors duration-150"
+            >
+                Add
+            </button>
+            <button
+                @click="showNewOverlay = false; newOverlayName = ''"
+                class="text-text-muted/50 hover:text-text-muted text-sm transition-colors"
+            >
+                Cancel
+            </button>
         </div>
     </div>
     <!-- Overlay Cards -->
     <div class="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-        <template x-for="overlay in overlays.filter(o => (o.type || 'hunt') === overlaySubTab)" :key="overlay.id">
-            <div class="bg-bg-card rounded-xl overflow-hidden">
+        <template
+            x-for="overlay in overlays.filter(o => (o.type || 'hunt') === overlaySubTab)"
+            :key="overlay.id"
+        >
+            <div
+                :data-overlay-id="overlay.id"
+                class="bg-bg-card rounded-xl overflow-hidden"
+            >
                 <!-- Overlay Header -->
-                <div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
-                    @click="selectedOverlayId = selectedOverlayId === overlay.id ? null : overlay.id">
-                    <span class="flex-1 text-sm font-semibold text-text" x-text="overlay.name"></span>
-                    <button @click.stop="copyOverlayUrl(overlay)" title="Copy overlay URL" class="text-xs text-text-muted hover:text-text transition-colors px-2 py-1 rounded hover:bg-primary/10">Copy URL</button>
-                    <button @click.stop="deleteOverlay(overlay.id)" title="Delete overlay" class="text-text-muted/50 hover:text-danger hover:bg-danger/10 rounded p-1 transition-colors duration-150">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <div
+                    class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary/5 transition-colors duration-150"
+                    @click="selectedOverlayId = selectedOverlayId === overlay.id ? null : overlay.id"
+                    data-testid="overlay-header"
+                >
+                    <span
+                        class="flex-1 text-sm font-semibold text-text"
+                        x-text="overlay.name"
+                    ></span>
+                    <button
+                        @click.stop="copyOverlayUrl(overlay)"
+                        title="Copy overlay URL"
+                        class="text-xs text-text-muted hover:text-text transition-colors px-2 py-1 rounded hover:bg-primary/10"
+                    >
+                        Copy URL
+                    </button>
+                    <button
+                        @click.stop="deleteOverlay(overlay.id)"
+                        title="Delete overlay"
+                        class="text-text-muted/50 hover:text-danger hover:bg-danger/10 rounded p-1 transition-colors duration-150"
+                    >
+                        <svg
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                         </svg>
                     </button>
-                    <svg class="w-4 h-4 text-text-muted/50 transition-transform duration-150" :class="selectedOverlayId === overlay.id ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    <svg
+                        class="w-4 h-4 text-text-muted/50 transition-transform duration-150"
+                        :class="selectedOverlayId === overlay.id ? 'rotate-180' : ''"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                        />
                     </svg>
                 </div>
                 <!-- Hunt Overlay Config -->
-                <div x-show="selectedOverlayId === overlay.id && (overlay.type || 'hunt') === 'hunt'" class="border-t border-primary/10 px-4 py-2 space-y-1">
-                    <template x-if="hunts.filter(h => h.status === 'active' || !h.status).length === 0">
-                        <div class="text-xs text-text-muted/50 py-2">No active hunts</div>
+                <div
+                    x-show="selectedOverlayId === overlay.id && (overlay.type || 'hunt') === 'hunt'"
+                    class="border-t border-primary/10 px-4 py-2 space-y-1"
+                >
+                    <template
+                        x-if="hunts.filter(h => h.status === 'active' || !h.status).length === 0"
+                    >
+                        <div class="text-xs text-text-muted/50 py-2">
+                            No active hunts
+                        </div>
                     </template>
-                    <template x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)" :key="hunt.id">
-                        <label class="flex items-center gap-3 py-1.5 cursor-pointer group">
+                    <template
+                        x-for="hunt in hunts.filter(h => h.status === 'active' || !h.status)"
+                        :key="hunt.id"
+                    >
+                        <label
+                            :data-overlay-hunt-id="hunt.id"
+                            class="flex items-center gap-3 py-1.5 cursor-pointer group"
+                        >
                             <input
                                 type="checkbox"
                                 :checked="overlay.hunts.find(h => h.huntId === hunt.id)?.visible ?? false"
                                 @change="toggleHuntVisibility(overlay.id, hunt.id)"
                                 class="accent-primary"
                             />
-                            <img x-show="hunt.spriteUrl" :src="hunt.spriteUrl" class="w-6 h-6 object-contain" style="image-rendering: pixelated;" />
-                            <span class="text-sm text-text-muted group-hover:text-text transition-colors" x-text="hunt.displayName"></span>
+                            <img
+                                x-show="hunt.spriteUrl"
+                                :src="hunt.spriteUrl"
+                                class="w-6 h-6 object-contain"
+                                style="image-rendering: pixelated"
+                            />
+                            <span
+                                class="text-sm text-text-muted group-hover:text-text transition-colors"
+                                x-text="hunt.displayName"
+                            ></span>
                         </label>
                     </template>
-                    <div class="border-t border-primary/10 px-4 py-2 flex items-center gap-4">
-                        <span class="text-xs text-text-muted/50 uppercase tracking-wider">Show</span>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" :checked="overlay.elements.sprite" @change="updateOverlayElement(overlay.id, 'sprite', $event.target.checked)" class="accent-primary" />
+                    <div
+                        class="border-t border-primary/10 px-4 py-2 flex items-center gap-4"
+                    >
+                        <span
+                            class="text-xs text-text-muted/50 uppercase tracking-wider"
+                            >Show</span
+                        >
+                        <label
+                            data-testid="toggle-sprite"
+                            class="flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="overlay.elements.sprite"
+                                @change="updateOverlayElement(overlay.id, 'sprite', $event.target.checked)"
+                                class="accent-primary"
+                            />
                             <span class="text-xs text-text-muted">Sprite</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" :checked="overlay.elements.name" @change="updateOverlayElement(overlay.id, 'name', $event.target.checked)" class="accent-primary" />
+                        <label
+                            data-testid="toggle-name"
+                            class="flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="overlay.elements.name"
+                                @change="updateOverlayElement(overlay.id, 'name', $event.target.checked)"
+                                class="accent-primary"
+                            />
                             <span class="text-xs text-text-muted">Name</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" :checked="overlay.elements.count" @change="updateOverlayElement(overlay.id, 'count', $event.target.checked)" class="accent-primary" />
+                        <label
+                            data-testid="toggle-count"
+                            class="flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="overlay.elements.count"
+                                @change="updateOverlayElement(overlay.id, 'count', $event.target.checked)"
+                                class="accent-primary"
+                            />
                             <span class="text-xs text-text-muted">Count</span>
                         </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" :checked="overlay.elements.odds" @change="updateOverlayElement(overlay.id, 'odds', $event.target.checked)" class="accent-primary" />
+                        <label
+                            data-testid="toggle-odds"
+                            class="flex items-center gap-1.5 cursor-pointer"
+                        >
+                            <input
+                                type="checkbox"
+                                :checked="overlay.elements.odds"
+                                @change="updateOverlayElement(overlay.id, 'odds', $event.target.checked)"
+                                class="accent-primary"
+                            />
                             <span class="text-xs text-text-muted">Odds</span>
                         </label>
                     </div>
                 </div>
                 <!-- Stats Overlay Config -->
-                <div x-show="selectedOverlayId === overlay.id && overlay.type === 'stats'" class="border-t border-primary/10 px-4 py-3 space-y-3">
+                <div
+                    x-show="selectedOverlayId === overlay.id && overlay.type === 'stats'"
+                    class="border-t border-primary/10 px-4 py-3 space-y-3"
+                >
                     <!-- Total Completed Toggle -->
                     <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" :checked="overlay.elements.totalCompleted" @change="updateOverlayElement(overlay.id, 'totalCompleted', $event.target.checked)" class="accent-primary" />
-                        <span class="text-sm text-text-muted">Show total completed hunts</span>
+                        <input
+                            type="checkbox"
+                            :checked="overlay.elements.totalCompleted"
+                            @change="updateOverlayElement(overlay.id, 'totalCompleted', $event.target.checked)"
+                            class="accent-primary"
+                        />
+                        <span class="text-sm text-text-muted"
+                            >Show total completed hunts</span
+                        >
                     </label>
                     <!-- Breakdown -->
                     <div class="flex items-center gap-3">
-                        <span class="text-xs text-text-muted/50 uppercase tracking-wider">Breakdown</span>
+                        <span
+                            class="text-xs text-text-muted/50 uppercase tracking-wider"
+                            >Breakdown</span
+                        >
                         <select
                             :value="overlay.elements.breakdown"
                             @change="updateOverlayElement(overlay.id, 'breakdown', $event.target.value || null)"
-                            class="bg-bg-surface border border-primary/20 rounded-lg px-2 py-1 text-sm text-text-muted focus:outline-none focus:border-primary/60">
+                            class="bg-bg-surface border border-primary/20 rounded-lg px-2 py-1 text-sm text-text-muted focus:outline-none focus:border-primary/60"
+                        >
                             <option value="">None</option>
                             <option value="completed">Completed hunts</option>
                             <option value="active">Active hunts</option>
@@ -110,11 +244,15 @@
                     </div>
                     <!-- Game Filter -->
                     <div class="flex items-center gap-3">
-                        <span class="text-xs text-text-muted/50 uppercase tracking-wider">Game</span>
+                        <span
+                            class="text-xs text-text-muted/50 uppercase tracking-wider"
+                            >Game</span
+                        >
                         <select
                             :value="overlay.game || ''"
                             @change="updateOverlayGame(overlay.id, $event.target.value)"
-                            class="bg-bg-surface border border-primary/20 rounded-lg px-2 py-1 text-sm text-text-muted focus:outline-none focus:border-primary/60">
+                            class="bg-bg-surface border border-primary/20 rounded-lg px-2 py-1 text-sm text-text-muted focus:outline-none focus:border-primary/60"
+                        >
                             <option value="">All Games</option>
                             <template x-for="game in games" :key="game">
                                 <option :value="game" x-text="game"></option>
